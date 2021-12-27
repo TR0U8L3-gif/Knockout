@@ -1,14 +1,23 @@
 # knockout
- quick code overview: 
+ This respository is my first project for the basics of programming at the Białystok University of Technology
+#### quick code overview: 
  elimination tournament where the loser of each match-up is immediately eliminated from the tournament
+##### instruction: 
+ A certain number of teams take part in the competition. 
+ Each of them is labeled by: 
+ - name
+ - city
+ - homepage address
+ - contact email
+ A team must have one or more players, one of them is the captain.
+ Each team member has:
+    - name  
+    - surname  
+    - age
+After entering the data and starting the competition program randomly creates the order of matches.
+If the number of teams is not a power of two, empty spaces are filled with empty data which means that some participants will go straight to the next stage.
+The user can enter the results of the next matches and choose the winners up to the final.
+Each team may also be disqualified at any stage.
 
- :
 
 
- Zadanie "Mecze w trybie pucharowym" opis:
-    Do zawodów przystępuje pewna liczba drużyn, każda z nich jest opisywana przez nazwę, miasto oraz adres strony domowej i email kontaktowy
-    Drużyna musi mieć jednego lub więcej zawodników, z których jeden jest kapitanem (każdy zawodnik ma imię, nazwisko oraz wiek)
-    Po wprowadzeniu danych i uruchomieniu zawodów, tworzona jest (losowo) kolejność rozgrywek w trybie pucharowym
-    Jeśli liczba drużyn nie jest potęgą dwójki, wolne miejsca są uzupełniane pustymi danymi (niektórzy uczestnicy od razu przejdą do kolejnego etapu)
-    Możemy wprowadzać wyniki kolejnych meczów i wyłaniać zwycięzców kolejnych etapów, aż do finału
-    Każda drużyna może również zostać na dowolnym etapie zdyskwalifikowana
