@@ -3,7 +3,8 @@
 ## quick code overview: 
  elimination tournament where the loser of each match-up is immediately eliminated from the tournament
 
-### instruction: 
+
+### instructions: 
  A certain number of teams take part in the competition. 
  Each of them is labeled by: 
  * name
