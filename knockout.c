@@ -1,79 +1,61 @@
+/*
+ * Do zawodów przystêpuje pewna liczba dru¿yn, ka¿da z nich jest opisywana przez nazwê, miasto oraz adres strony domowej i email kontaktowy
+ * Dru¿yna musi mieæ jednego lub wiêcej zawodników, z których jeden jest kapitanem (ka¿dy zawodnik ma imiê, nazwisko oraz wiek)
+ * Po wprowadzeniu danych i uruchomieniu zawodów, tworzona jest (losowo) kolejnoœæ rozgrywek w trybie pucharowym
+ * Jeœli liczba dru¿yn nie jest potêg¹ dwójki, wolne miejsca s¹ uzupe³niane pustymi danymi (niektórzy uczestnicy od razu przejd¹ do kolejnego etapu)
+ * Mo¿emy wprowadzaæ wyniki kolejnych meczów i wy³aniaæ zwyciêzców kolejnych etapów, a¿ do fina³u
+ * Ka¿da dru¿yna mo¿e równie¿ zostaæ na dowolnym etapie zdyskwalifikowana
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-void delay(int number_of_seconds)
-{
-    // Converting time into milli_seconds
-    int milli_seconds = 1000 * number_of_seconds;
-  
-    // Storing start time
-    clock_t start_time = clock();
-  
-    // looping till required time is not achieved
-    while (clock() < start_time + milli_seconds);
+void delay(int);
+void clear();
+int how_many_games(int);
+
+int main(){
+    int how_many_teams = 0;
+    do
+    {
+        clear();
+        printf("Enter the number of teams participating in the tournament: ");
+        scanf("%d", &how_many_teams);
+        if (how_many_teams <= 0)
+        {
+            clear();
+            printf("The number of participating teams must be greater than one!!!\n");
+            delay(3000);
+        }
+    } while (how_many_teams <= 0);
+    how_many_games(how_many_teams);
+    return 0;
 }
 
-void start(){
-    char z = '|';
-    while (1)
-    {
-        for(int i = 0; i < 8; i++){
-            switch (i%8)
-            {
-            case 0:
-                z = '|';
-                break;
-            case 1:
-                z = '/';
-                break;
-            case 2:
-                z = '-';
-                break;
-            case 3:
-                z = '\\';
-                break;
-            case 4:
-                z = '|';
-                break;
-            case 5:
-                z = '/';
-                break;
-            case 6:
-                z = '-';
-                break;
-            case 7:
-                z = '\\';
-                break;
-            }
-            printf("%c\n", z);
-            delay(150);
-            system("clear");
-        }
-        
-    }
+void delay(int number_of_milli_seconds){
+    clock_t start_time = clock();
+    while (clock() < start_time + number_of_milli_seconds);
 }
-int ile_meczy(int x){
-    int ile = 0;
-    if(x<0){
+
+void clear(){
+    system("cls");
+   // system("clear");
+}
+
+int how_many_games(int number_of_teams){
+    int result = 0;
+    if (number_of_teams < 0) {
         return -1;
     }
-    for(int i = 1; x>=2; i++)
+    for (int i = 1; number_of_teams >= 2; i++)
     {
-        int r = x%2;
-        int g = x/2;
-        ile += g;
-        x = g+r;
-        printf("Etap %d liczba druzyn: %d liczba meczy: %d\n", i, x, g);
+        int rest = number_of_teams % 2;
+        int groups = number_of_teams / 2;
+        result += groups;
+        printf("Stage %d number of teams: %d number of matches: %d\n", i, number_of_teams, groups);
+        number_of_teams = groups + rest;
     }
-    printf("Liczba rozegranych meczy w turnieju: %d\n", ile);
-    return ile;
-}
-int main(){
-    //start();
-    int ile_druzyn = 0;
-    printf("Podaj liczbe druzyn bioracych udzial w zawodach: ");
-    scanf("%d", &ile_druzyn);
-    ile_meczy(ile_druzyn);
-    return 0;
+    printf("Number of matches played in the entire tournament: %d\n", result);
+    return result;
 }
