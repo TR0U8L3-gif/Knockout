@@ -10,10 +10,35 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
+#include <stdbool.h>
 
-void delay(int);
+struct player
+{
+    char* name;
+    char* surname;
+    int age;
+};
+
+struct team
+{
+    bool in_tournament;
+    int team_number;
+    int team_size;
+    //char* name;
+    //char* city;
+    //har* websie;    
+    //char* email;
+    struct player capitan;
+    //struct player* players;
+    struct team* next_team;
+};
+
+
 void clear(void);
 int how_many_games(int);
+void print_all_teams(struct team*);
+struct team* enter_teams(int, struct team*);
 
 int main(){
     int how_many_teams = 0;
@@ -26,16 +51,15 @@ int main(){
         {
             clear();
             printf("The number of participating teams must be greater than one!!!\n");
-            delay(3000);
+            sleep(3);
         }
     } while (how_many_teams <= 0);
     how_many_games(how_many_teams);
-    return 0;
-}
+    struct team* first_team = NULL;
+    first_team = enter_teams(how_many_teams, first_team);
+    print_all_teams(first_team);
 
-void delay(int number_of_milli_seconds){
-    clock_t start_time = clock();
-    while (clock() < start_time + number_of_milli_seconds);
+    return 0;
 }
 
 void clear(){
@@ -63,4 +87,64 @@ int how_many_games(int number_of_teams){
     }
     printf("Number of matches played in the entire tournament: %d\n", result);
     return result;
+}
+
+void print_all_teams(struct team *team){
+    while (team!=NULL)
+    {
+        clear();
+        printf("team_number: %d\n address: %p\n next_team address: %p \n team_size: %d players\n is team still in tournament? ",team->team_number,team,team->next_team,team->team_size);
+        if(team->in_tournament){
+            printf("yes");
+        }
+        else{
+            printf("no");
+        }
+        printf("\n");
+        sleep(3);
+        team = team->next_team;
+    }   
+}
+
+struct team* enter_teams(int number_of_teams, struct team* team){
+    clear();
+    struct team* first_team = NULL;
+    for (int i = 1; i <= number_of_teams; i++)
+    {
+        struct team* new_team = malloc(sizeof(struct team));
+        new_team->in_tournament = true;
+        new_team->team_number = i;
+        new_team->next_team = NULL;
+        
+        int team_members;
+        do
+        {
+            clear();
+            printf("Enter how many players team[%d] has: ",i);
+            scanf("%d", &team_members);
+            if (team_members < 1)
+            {
+                clear();
+                printf("A team must have one or more players!!!\n");
+                sleep(3);
+            }
+        } while (team_members<1);
+
+        new_team->team_size = team_members;
+        
+
+        
+        if(first_team == NULL){
+           first_team = new_team;
+        }
+        else{
+            team = first_team;
+            while ( team->next_team != NULL)
+            {
+                team = team->next_team;
+            }
+            team->next_team = new_team;  
+        }
+    }
+    return first_team;
 }
