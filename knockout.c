@@ -12,12 +12,18 @@
 #include <time.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <string.h>
+
+#define MAX 30
+#define MAX_LONG 50
+#define SLEEP 3
+#define SLEEP_LONG 5
 
 struct player
 {
-    char* name;
-    char* surname;
-    int age;
+    char player_name[MAX];
+    char player_surname[MAX];
+    int player_age;
 };
 
 struct team
@@ -25,10 +31,10 @@ struct team
     bool in_tournament;
     int team_number;
     int team_size;
-    //char* name;
-    //char* city;
-    //har* websie;    
-    //char* email;
+    char team_name[MAX];
+    char team_city[MAX];
+    char team_websie[MAX_LONG];
+    char team_email[MAX_LONG];
     struct player capitan;
     //struct player* players;
     struct team* next_team;
@@ -51,10 +57,10 @@ int main(){
         {
             clear();
             printf("The number of participating teams must be greater than one!!!\n");
-            sleep(3);
+            sleep(SLEEP);
         }
     } while (how_many_teams <= 0);
-    how_many_games(how_many_teams);
+   // how_many_games(how_many_teams);
     struct team* first_team = NULL;
     first_team = enter_teams(how_many_teams, first_team);
     print_all_teams(first_team);
@@ -86,6 +92,7 @@ int how_many_games(int number_of_teams){
         number_of_teams = groups + rest;
     }
     printf("Number of matches played in the entire tournament: %d\n", result);
+    sleep(3);
     return result;
 }
 
@@ -93,7 +100,9 @@ void print_all_teams(struct team *team){
     while (team!=NULL)
     {
         clear();
-        printf("team_number: %d\n address: %p\n next_team address: %p \n team_size: %d players\n is team still in tournament? ",team->team_number,team,team->next_team,team->team_size);
+        printf("team name: %s\nteam number: %d\n",team->team_name,team->team_number);
+        printf("city: %s\nwebsite: %s\ne-mail: %s\n",team->team_city,team->team_websie,team->team_email);
+        printf("team size: %d players\nis team still in tournament? ",team->team_size);
         if(team->in_tournament){
             printf("yes");
         }
@@ -101,9 +110,11 @@ void print_all_teams(struct team *team){
             printf("no");
         }
         printf("\n");
-        sleep(3);
+        printf("address: %p\nnext team address: %p \n",team,team->next_team);
+
+        sleep(SLEEP_LONG);
         team = team->next_team;
-    }   
+    }
 }
 
 struct team* enter_teams(int number_of_teams, struct team* team){
@@ -115,7 +126,100 @@ struct team* enter_teams(int number_of_teams, struct team* team){
         new_team->in_tournament = true;
         new_team->team_number = i;
         new_team->next_team = NULL;
-        
+
+
+        char name[MAX];
+        bool ok = false;
+        do
+        {
+            char option;
+            clear();
+            printf("Enter team[%d] name: ",i);
+            scanf(" %[^\n]",name);
+            if(strlen(name)>(MAX-1)){
+                printf("Maximum team name is %d characters!!!", MAX-1);
+                sleep(SLEEP);
+            }
+            else{
+                clear();
+                printf("Team[%d] name is \"%s\"\nto correct team name press 'r'\nto accept team name press any other letter\noption: ",i,name);
+                scanf(" %c",&option);
+                if(option != 'r'){
+                    ok = true;
+                }
+            }
+        }while(!ok);
+        strcpy(new_team->team_name, name);
+
+        char city[MAX];
+        ok = false;
+        do
+        {
+            char option;
+            clear();
+            printf("Enter team[%d] city: ",i);
+            scanf(" %[^\n]",city);
+            if(strlen(name)>(MAX-1)){
+                printf("Maximum city name is %d characters!!!", MAX-1);
+                sleep(SLEEP);
+            }
+            else{
+                clear();
+                printf("Team[%d] city is \"%s\"\nto correct city name press 'r'\nto accept city name press any other letter\noption: ",i,city);
+                scanf(" %c",&option);
+                if(option != 'r'){
+                    ok = true;
+                }
+            }
+        }while(!ok);
+        strcpy(new_team->team_city, city);
+
+        char website[MAX_LONG];
+        ok = false;
+        do
+        {
+            char option;
+            clear();
+            printf("Enter team[%d] website: ",i);
+            scanf(" %[^\n]",website);
+            if(strlen(name)>(MAX_LONG-1)){
+                printf("Maximum team website name is %d characters!!!", MAX_LONG-1);
+                sleep(SLEEP);
+            }
+            else{
+                clear();
+                printf("Team[%d] website is \"%s\"\nto correct team website name press 'r'\nto accept team website name press any other letter\noption: ",i,website);
+                scanf(" %c",&option);
+                if(option != 'r'){
+                    ok = true;
+                }
+            }
+        }while(!ok);
+        strcpy(new_team->team_websie, website);
+
+        char email[MAX_LONG];
+        ok = false;
+        do
+        {
+            char option;
+            clear();
+            printf("Enter team[%d] email: ",i);
+            scanf(" %[^\n]",email);
+            if(strlen(name)>(MAX_LONG-1)){
+                printf("Maximum team email size is %d characters!!!", MAX_LONG-1);
+                sleep(SLEEP);
+            }
+            else{
+                clear();
+                printf("Team[%d] email is \"%s\"\nto correct team email press 'r'\nto accept team email press any other letter\noption: ",i,email);
+                scanf(" %c",&option);
+                if(option != 'r'){
+                    ok = true;
+                }
+            }
+        }while(!ok);
+        strcpy(new_team->team_email, email);
+
         int team_members;
         do
         {
@@ -126,14 +230,14 @@ struct team* enter_teams(int number_of_teams, struct team* team){
             {
                 clear();
                 printf("A team must have one or more players!!!\n");
-                sleep(3);
+                sleep(SLEEP);
             }
         } while (team_members<1);
 
         new_team->team_size = team_members;
-        
 
-        
+
+
         if(first_team == NULL){
            first_team = new_team;
         }
@@ -143,7 +247,7 @@ struct team* enter_teams(int number_of_teams, struct team* team){
             {
                 team = team->next_team;
             }
-            team->next_team = new_team;  
+            team->next_team = new_team;
         }
     }
     return first_team;
