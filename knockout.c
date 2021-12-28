@@ -1,10 +1,10 @@
 /*
- * Do zawodów przystêpuje pewna liczba dru¿yn, ka¿da z nich jest opisywana przez nazwê, miasto oraz adres strony domowej i email kontaktowy
- * Dru¿yna musi mieæ jednego lub wiêcej zawodników, z których jeden jest kapitanem (ka¿dy zawodnik ma imiê, nazwisko oraz wiek)
- * Po wprowadzeniu danych i uruchomieniu zawodów, tworzona jest (losowo) kolejnoœæ rozgrywek w trybie pucharowym
- * Jeœli liczba dru¿yn nie jest potêg¹ dwójki, wolne miejsca s¹ uzupe³niane pustymi danymi (niektórzy uczestnicy od razu przejd¹ do kolejnego etapu)
- * Mo¿emy wprowadzaæ wyniki kolejnych meczów i wy³aniaæ zwyciêzców kolejnych etapów, a¿ do fina³u
- * Ka¿da dru¿yna mo¿e równie¿ zostaæ na dowolnym etapie zdyskwalifikowana
+ * Do zawodow przystepuje pewna liczba druzyn, kazda z nich jest opisywana przez nazwe, miasto oraz adres strony domowej i email kontaktowy
+ * Druzyna musi miec jednego lub wiecej zawodnikow, z ktorych jeden jest kapitanem (kazdy zawodnik ma imie, nazwisko oraz wiek)
+ * Po wprowadzeniu danych i uruchomieniu zawodow, tworzona jest (losowo) kolejnosc rozgrywek w trybie pucharowym
+ * Jesli liczba druzyn nie jest potega dwojki, wolne miejsca se uzupelniane pustymi danymi (niektorzy uczestnicy od razu przejda do kolejnego etapu)
+ * Mozemy wprowadzac wyniki kolejnych meczow i wylaniac zwyciezcow kolejnych etapow, az do finalu
+ * Kazda druzyna moze rowniez zostac na dowolnym etapie zdyskwalifikowana
  */
 
 #include <stdio.h>
@@ -12,7 +12,7 @@
 #include <time.h>
 
 void delay(int);
-void clear();
+void clear(void);
 int how_many_games(int);
 
 int main(){
@@ -39,8 +39,13 @@ void delay(int number_of_milli_seconds){
 }
 
 void clear(){
-    system("cls");
-   // system("clear");
+	#if _WIN32
+	    system("cls");
+	#elif defined(unix) || defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
+        system("clear");
+	#else
+	    printf("\n");
+	#endif
 }
 
 int how_many_games(int number_of_teams){
