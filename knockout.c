@@ -41,33 +41,25 @@ struct team
 
 
 void clear(void);
+int how_many_teams(void);
 int how_many_games(int);
-void print_all_teams(struct team*);
-struct team* enter_teams(int, struct team*);
+void print_teams(struct team*, int);
+struct team* enter_teams(struct team*, int);
+int tournament_handler(struct team*, int);
 
 int main(){
-    int how_many_teams = 0;
-    do
-    {
-        clear();
-        printf("Enter the number of teams participating in the tournament: ");
-        scanf("%d", &how_many_teams);
-        if (how_many_teams <= 0)
-        {
-            clear();
-            printf("The number of participating teams must be greater than one!!!\n");
-            sleep(SLEEP);
-        }
-    } while (how_many_teams <= 0);
-   // how_many_games(how_many_teams);
+
+    int participating_teams = how_many_teams();
+    //how_many_games(participating_teams);
     struct team* first_team = NULL;
-    first_team = enter_teams(how_many_teams, first_team);
-    print_all_teams(first_team);
+    first_team = enter_teams(first_team, participating_teams);
+    //print_teams(first_team, participating_teams);
+    tournament_handler(first_team, participating_teams);
 
     return 0;
 }
 
-void clear(){
+void clear(void){
 	#if _WIN32
 	    system("cls");
 	#elif defined(unix) || defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
@@ -75,6 +67,23 @@ void clear(){
 	#else
 	    printf("\n");
 	#endif
+}
+
+int how_many_teams(void){
+    int teams;
+    do
+    {
+        clear();
+        printf("Enter the number of teams participating in the tournament: ");
+        scanf("%d", &teams);
+        if (teams <=1)
+        {
+            clear();
+            printf("The number of participating teams must be greater than one!!!\n");
+            sleep(SLEEP);
+        }
+    } while (teams <= 1);
+    return teams;
 }
 
 int how_many_games(int number_of_teams){
@@ -95,33 +104,47 @@ int how_many_games(int number_of_teams){
     return result;
 }
 
-void print_all_teams(struct team *team){
+void print_teams(struct team *team, int number_of_teams){
+    clear();
+    int x;
+    do{
+        printf("To printa all teams type '0'\nTo print one team type their team_muber\noption: ");
+        scanf("%d", &x);
+        if(x<0||x>number_of_teams){
+            clear();
+            printf("Input is incorrect!!!\nthe number must be in the range [0,%d]",x);
+            sleep(SLEEP);
+        }
+    }while(x<0);
+
     while (team!=NULL)
     {
-        clear();
-        printf("team name: %s\n\nteam number: %d\n",team->team_name,team->team_number);
-        printf("city: %s\nwebsite: %s\ne-mail: %s\n",team->team_city,team->team_websie,team->team_email);
-        printf("team size: %d players\nis team still in tournament? ",team->team_size);
-        if(team->in_tournament){
-            printf("yes");
-        }
-        else{
-            printf("no");
-        }
-        printf("\n");
-        printf("\nteam captain name: %s\nsurname: %s\nage: %d\n\n",team->captain.player_name,team->captain.player_surname,team->captain.player_age);
-        for(int i = 0; i<(team->team_size)-1; i++){
-           printf("player[%d] name: %s    surname: %s    age: %d\n",i+1,team->players[i].player_name,team->players[i].player_surname,team->players[i].player_age);
-        }
-        printf("\n");
-        printf("address: %p\nnext team address: %p \n",team,team->next_team);
+        if(team->team_number == x || x==0){
+            clear();
+            printf("team name: %s\n\nteam number: %d\n",team->team_name,team->team_number);
+            printf("city: %s\nwebsite: %s\ne-mail: %s\n",team->team_city,team->team_websie,team->team_email);
+            printf("team size: %d players\nis team still in tournament? ",team->team_size);
+            if(team->in_tournament){
+                printf("yes");
+            }
+            else{
+                printf("no");
+            }
+            printf("\n");
+            printf("\nteam captain name: %s\nsurname: %s\nage: %d\n\n",team->captain.player_name,team->captain.player_surname,team->captain.player_age);
+            for(int i = 0; i<(team->team_size)-1; i++){
+            printf("player[%d] name: %s    surname: %s    age: %d\n",i+1,team->players[i].player_name,team->players[i].player_surname,team->players[i].player_age);
+            }
+            printf("\n");
+            printf("address: %p\nnext team address: %p \n",team,team->next_team);
 
-        sleep(SLEEP_LONG);
-        team = team->next_team;
+            sleep(SLEEP_LONG);
+            team = team->next_team;
+        }
     }
 }
 
-struct team* enter_teams(int number_of_teams, struct team* team){
+struct team* enter_teams(struct team* team, int number_of_teams){
     clear();
     struct team* first_team = NULL;
     for (int i = 1; i <= number_of_teams; i++)
@@ -405,4 +428,28 @@ struct team* enter_teams(int number_of_teams, struct team* team){
         }
     }
     return first_team;
+}
+
+int tournament_handler(struct team* team, int number_of_teams){
+    bool ok = false;
+    char input[2];
+    do{
+        clear();
+        printf("%d teams take part in the competition \n\n", number_of_teams);
+        printf(" Input 'd' to display participating team\n");
+        printf(" Input 'i' to display number of games during the contets\n");
+        printf(" Input 'e' to re-enter participating team\n");
+        printf("\noption: ");
+        scanf(" %[^\n]",input);
+        if(strlen(input)>1){
+            clear();
+            printf("Incorrect input!!!\npleas enter one letter");
+            sleep(SLEEP);
+        }
+        else{
+            printf("%c", input[0]);
+            ok = true;
+        }
+    }
+    while(!ok);
 }
