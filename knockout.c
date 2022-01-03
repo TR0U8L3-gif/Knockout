@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <string.h>
+#include <ctype.h>
 
 #define MAX 30
 #define MAX_LONG 50
@@ -44,18 +45,19 @@ void clear(void);
 int how_many_teams(void);
 int how_many_games(int);
 void print_teams(struct team*, int);
+void print_all_teams_to_file(struct team*, int);
 struct team* enter_teams(struct team*, int);
-int tournament_handler(struct team*, int);
+//struct team* enter_teams_from_file(struct team*, int);
+int tournament_handler(struct team**, struct team*, int);
 
 int main(){
 
     int participating_teams = how_many_teams();
-    //how_many_games(participating_teams);
+    
     struct team* first_team = NULL;
-    first_team = enter_teams(first_team, participating_teams);
-    //print_teams(first_team, participating_teams);
-    tournament_handler(first_team, participating_teams);
-
+    struct team** first_team_address = &first_team;
+    //print_all_teams_to_file(first_team,participating_teams);
+    tournament_handler(first_team_address, first_team, participating_teams);
     return 0;
 }
 
@@ -96,11 +98,12 @@ int how_many_games(int number_of_teams){
         int rest = number_of_teams % 2;
         int groups = number_of_teams / 2;
         result += groups;
-        printf("Stage %d number of teams: %d number of matches: %d\n", i, number_of_teams, groups);
+        printf("Stage [%d]\n number of teams: %d number of matches: %d\n\n", i, number_of_teams, groups);
         number_of_teams = groups + rest;
     }
     printf("Number of matches played in the entire tournament: %d\n", result);
-    sleep(3);
+    int time = SLEEP_LONG * number_of_teams/2;
+    sleep(time);
     return result;
 }
 
@@ -112,7 +115,7 @@ void print_teams(struct team *team, int number_of_teams){
         scanf("%d", &x);
         if(x<0||x>number_of_teams){
             clear();
-            printf("Input is incorrect!!!\nthe number must be in the range [0,%d]",x);
+            printf("Input is incorrect!!!\nthe number must be in the range [0,%d]",number_of_teams);
             sleep(SLEEP);
         }
     }while(x<0);
@@ -137,11 +140,53 @@ void print_teams(struct team *team, int number_of_teams){
             }
             printf("\n");
             printf("address: %p\nnext team address: %p \n",team,team->next_team);
-
             sleep(SLEEP_LONG);
             team = team->next_team;
         }
     }
+}
+
+void print_all_teams_to_file(struct team *team, int number_of_teams){
+    char file_name[MAX];
+    bool ok = false;
+    do
+    {
+        char option;
+        clear();
+        printf("Input file name where to save participating teams\nfile name (without .txt): ");
+        scanf(" %[^\n]",file_name);
+        if(strlen(file_name)>(MAX-5)){
+            clear();
+            printf("Maximum file name is %d characters!!!\n", MAX-5);
+            sleep(SLEEP);
+        }
+        else{
+            clear();
+            strcat(file_name,".txt");
+            printf("File to save teams: %s\n",file_name);
+            printf(" to correct file name input 'r'\n to accept file name input any other letter\noption: ");
+            scanf(" %c",&option);
+            if(option != 'r'){
+                ok = true;
+            }
+        }
+    }while(!ok);
+    
+    FILE *f = NULL;
+    f = fopen(file_name, "w");
+
+    for(int k = 0; k < number_of_teams; k++)
+    {
+        fprintf(f, "%s\n%d\n", team->team_name,team->team_number);
+        fprintf(f, "%s\n%s\n%s\n", team->team_city,team->team_websie,team->team_email);
+        fprintf(f, "%d\n%d\n", team->team_size,team->in_tournament);
+        fprintf(f, "%s\n%s\n%d\n", team->captain.player_name,team->captain.player_surname,team->captain.player_age);
+        for(int i = 0; i<(team->team_size)-1; i++){
+            fprintf(f, "%s\n%s\n%d\n",team->players[i].player_name,team->players[i].player_surname,team->players[i].player_age);
+        }
+        team = team->next_team;
+    }
+    fclose(f);
 }
 
 struct team* enter_teams(struct team* team, int number_of_teams){
@@ -170,7 +215,7 @@ struct team* enter_teams(struct team* team, int number_of_teams){
                 }
                 else{
                     clear();
-                    printf("Team[%d] name is \"%s\"\nto correct team name input 'r'\nto accept team name input any other letter\noption: ",i,name);
+                    printf("Team[%d] name is \"%s\"\n to correct team name input 'r'\n to accept team name input any other letter\noption: ",i,name);
                     scanf(" %c",&option);
                     if(option != 'r'){
                         ok = true;
@@ -430,16 +475,25 @@ struct team* enter_teams(struct team* team, int number_of_teams){
     return first_team;
 }
 
-int tournament_handler(struct team* team, int number_of_teams){
+int tournament_handler(struct team** first_team, struct team* team, int number_of_teams){
     bool ok = false;
     char input[2];
     do{
         clear();
         printf("%d teams take part in the competition \n\n", number_of_teams);
-        printf(" Input 'd' to display participating team\n");
-        printf(" Input 'i' to display number of games during the contets\n");
-        printf(" Input 'e' to re-enter participating team\n");
+        
+        printf(" Input 'n' to display number of games during the contets\n");
+        printf(" Input 'e' to enter participating teams from keyboard\n");
+        printf(" Input 'l' to load participating teams from file\n");
+        printf(" Input 'x' to exit program\n");
+        if(team != NULL)
+        {
+            printf(" Input 'd' to display participating team\n");
+            printf(" Input 't' to start the tournament\n");
+            printf(" Input 's' to save participating teams to file\n");
+        }
         printf("\noption: ");
+        
         scanf(" %[^\n]",input);
         if(strlen(input)>1){
             clear();
@@ -447,9 +501,61 @@ int tournament_handler(struct team* team, int number_of_teams){
             sleep(SLEEP);
         }
         else{
-            printf("%c", input[0]);
-            ok = true;
+            clear();
+            //printf("input: %c\n", input[0]);
+            switch (input[0])
+            {
+                case 'n':
+                    how_many_games(number_of_teams);
+                break;
+
+                case 'e':
+                   team = enter_teams(team, number_of_teams);
+                   (*first_team) = team; 
+                break;
+
+                case 'l':
+                    printf("Loading teams from file...\n");
+                    sleep(SLEEP);
+                break;
+
+                case 'x':
+                    ok = true;
+                break;
+
+                default:
+                    if (team == NULL)
+                    {
+                        printf("Incorect input!!!\nthere is not [%c] option\n", input[0]);
+                        sleep(SLEEP);
+                    }
+                    else{
+                        switch (input[0])
+                        {
+                            case 'd':
+                                print_teams(team, number_of_teams);
+                            break;
+
+                            case 't':
+                                printf("Starting...\n");
+                                sleep(SLEEP);
+                            break;
+
+                            case 's':
+                                print_all_teams_to_file(team, number_of_teams);
+                            break;
+
+                            default:
+                                printf("Incorect input!!!\nthere is not [%c] option\n", input[0]);
+                                sleep(SLEEP);
+                            break;
+                        } 
+                    }
+                break;
+            }      
         }
     }
     while(!ok);
+
+    return 0;
 }
