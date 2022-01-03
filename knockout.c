@@ -12,7 +12,6 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <string.h>
-#include <ctype.h>
 
 #define MAX 30
 #define MAX_LONG 50
@@ -42,22 +41,30 @@ struct team
 
 
 void clear(void);
+int count_file_lines(char[]);
 int how_many_teams(void);
 int how_many_games(int);
 void print_teams(struct team*, int);
 void print_all_teams_to_file(struct team*, int);
 struct team* enter_teams(struct team*, int);
-//struct team* enter_teams_from_file(struct team*, int);
+struct team* enter_teams_from_file(struct team*, int);
 int tournament_handler(struct team**, struct team*, int);
 
 int main(){
 
-    int participating_teams = how_many_teams();
-    
+    int re_start;
+    int participating_teams;
     struct team* first_team = NULL;
     struct team** first_team_address = &first_team;
-    //print_all_teams_to_file(first_team,participating_teams);
-    tournament_handler(first_team_address, first_team, participating_teams);
+    
+    restart:
+        participating_teams = how_many_teams();
+        re_start = tournament_handler(first_team_address, first_team, participating_teams);
+    if(re_start == 1)
+    {
+        goto restart;
+    }
+
     return 0;
 }
 
@@ -69,6 +76,27 @@ void clear(void){
 	#else
 	    printf("\n");
 	#endif
+}
+
+int count_file_lines(char file_name[MAX]){
+    int count = 0;
+    FILE* f = NULL;
+    f = fopen(file_name,"r");
+    if(f == NULL){
+        clear();
+        printf("There is not such a file!!!\nfile %s not found\n", file_name);
+        sleep(SLEEP);
+        return -1;
+    }
+    else{
+        char data[MAX_LONG];
+        while(fscanf(f, " %[^\n]", data) != EOF)
+        {
+            count++;
+            //printf("%s: %d\n", data, count);
+        }
+    }
+    return count;
 }
 
 int how_many_teams(void){
@@ -475,6 +503,99 @@ struct team* enter_teams(struct team* team, int number_of_teams){
     return first_team;
 }
 
+struct team* enter_teams_from_file(struct team* team, int number_of_teams){
+    char file_name[MAX];
+    bool ok = false;
+    do
+    {
+        char option;
+        clear();
+        printf("Input the name of the file with informations about the teams\nfile name (without .txt): ");
+        scanf(" %[^\n]",file_name);
+        if(strlen(file_name)>(MAX-5)){
+            clear();
+            printf("Maximum file name is %d characters!!!\n", MAX-5);
+            sleep(SLEEP);
+        }
+        else{
+            clear();
+            strcat(file_name,".txt");
+            printf("File to read informations about teams: %s\n",file_name);
+            printf(" to correct file name input 'r'\n to accept file name input any other letter\noption: ");
+            scanf(" %c",&option);
+            if(option != 'r'){
+                ok = true;
+            }
+        }
+    }while(!ok); 
+
+    int lines = count_file_lines(file_name);
+
+    if(lines == -1){
+        clear();
+        printf("There is not such a file!!!\nfile %s not found\n", file_name);
+        sleep(SLEEP);
+        return team;
+    }
+    if(lines < (number_of_teams * 10)){
+        clear();
+        printf("The file %s is damaged!!!\ncheck it`s content\n", file_name);
+        sleep(SLEEP);
+        return team;
+    }
+
+    FILE* f = NULL;
+    f = fopen(file_name,"r");
+
+    struct team* first_team = NULL;
+    for (int i = 1; i <= number_of_teams; i++)
+    {
+        printf("team[%d] loading...\n", i);
+        struct team* new_team = malloc(sizeof(struct team));
+
+        int players = 0;
+        fscanf(f, " %[^\n]", new_team->team_name);
+        fscanf(f, " %d", &new_team->team_number);
+        fscanf(f, " %[^\n]", new_team->team_city);
+        fscanf(f, " %[^\n]", new_team->team_websie);
+        fscanf(f, " %[^\n]", new_team->team_email);
+        fscanf(f, "%d" , &new_team->team_size);
+        int take_part = 1;
+        fscanf(f, "%d" , &take_part);
+        new_team->in_tournament = (bool)take_part;
+        players = new_team->team_size;
+        fscanf(f, " %[^\n]", new_team->captain.player_name);
+        fscanf(f, " %[^\n]", new_team->captain.player_surname);
+        fscanf(f, "%d" , &new_team->captain.player_age);
+        players--;
+
+        struct player* members = malloc(players * sizeof(struct player));
+        for (int k = 0; k < players; k++)
+        {
+            fscanf(f, " %[^\n]", members[k].player_name);
+            fscanf(f, " %[^\n]", members[k].player_surname);
+            fscanf(f, "%d" , &members[k].player_age);
+        }
+        new_team->players = members;
+        
+        if(first_team == NULL){
+            first_team = new_team;
+        }
+        else{
+            team = first_team;
+            while ( team->next_team != NULL)
+            {
+                team = team->next_team;
+            }
+            team->next_team = new_team;
+        }
+        
+        printf("team[%d] loaded\n", i);
+    }
+    fclose(f);
+    return first_team;        
+}
+
 int tournament_handler(struct team** first_team, struct team* team, int number_of_teams){
     bool ok = false;
     char input[2];
@@ -485,7 +606,9 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
         printf(" Input 'n' to display number of games during the contets\n");
         printf(" Input 'e' to enter participating teams from keyboard\n");
         printf(" Input 'l' to load participating teams from file\n");
+        printf(" Input 'r' to restart program\n");
         printf(" Input 'x' to exit program\n");
+        
         if(team != NULL)
         {
             printf(" Input 'd' to display participating team\n");
@@ -515,8 +638,12 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
                 break;
 
                 case 'l':
-                    printf("Loading teams from file...\n");
-                    sleep(SLEEP);
+                    team = enter_teams_from_file(team, number_of_teams);
+                    (*first_team) = team; 
+                break;
+
+                case 'r':
+                    return 1;
                 break;
 
                 case 'x':
