@@ -15,8 +15,8 @@
 
 #define MAX 30
 #define MAX_LONG 50
-#define SLEEP 3
-#define SLEEP_LONG 5
+#define SLEEP 4
+#define SLEEP_LONG 8
 
 struct player
 {
@@ -41,7 +41,7 @@ struct team
 
 
 void clear(void);
-int count_file_lines(char[]);
+int count_file_teams(char[]);
 int how_many_teams(void);
 int how_many_games(int);
 void print_teams(struct team*, int);
@@ -78,8 +78,10 @@ void clear(void){
 	#endif
 }
 
-int count_file_lines(char file_name[MAX]){
+int count_file_teams(char file_name[MAX]){
     int count = 0;
+    int teams = 0;
+
     FILE* f = NULL;
     f = fopen(file_name,"r");
     if(f == NULL){
@@ -89,14 +91,42 @@ int count_file_lines(char file_name[MAX]){
         return -1;
     }
     else{
+        clear();
         char data[MAX_LONG];
+        int num = 0;
+
         while(fscanf(f, " %[^\n]", data) != EOF)
         {
             count++;
-            //printf("%s: %d\n", data, count);
         }
+
+        rewind(f);
+        
+        for (int line = 0; line < count;)
+        {
+            for(int i = 0; i < 5; i++){
+                fscanf(f, " %[^\n]", data);
+                line++;
+            }
+        
+            fscanf(f, "%d[^\n]", &num);
+            line++;
+            fscanf(f, " %[^\n]", data);
+            line++;
+            
+            for (int i = 0; i < (num * 3); i++)
+            {
+                fscanf(f, " %[^\n]", data);
+                line++; 
+            }
+            teams++;
+            
+        }
+        fclose(f);
     }
-    return count;
+    clear();
+    //printf("teams in file: %d\n", teams);
+    return teams;
 }
 
 int how_many_teams(void){
@@ -529,17 +559,19 @@ struct team* enter_teams_from_file(struct team* team, int number_of_teams){
         }
     }while(!ok); 
 
-    int lines = count_file_lines(file_name);
+    int file_teams = count_file_teams(file_name);
 
-    if(lines == -1){
+    if(file_teams == -1){
         clear();
         printf("There is not such a file!!!\nfile %s not found\n", file_name);
         sleep(SLEEP);
         return team;
     }
-    if(lines < (number_of_teams * 10)){
+
+    if(file_teams < number_of_teams){
         clear();
-        printf("The file %s is damaged!!!\ncheck it`s content\n", file_name);
+        printf("The file %s is damaged!!!\n teams taking part in the competition is %d\n", file_name, number_of_teams);
+        printf(" file contains %d teams\nAdd %d teams to file\n", file_teams, (number_of_teams-file_teams));
         sleep(SLEEP);
         return team;
     }
