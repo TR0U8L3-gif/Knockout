@@ -215,8 +215,8 @@ void print_teams(struct team *team, int number_of_teams){
             printf("\n");
             printf("address: %p\nnext team address: %p \n",team,team->next_team);
             sleep(SLEEP_LONG);
-            team = team->next_team;
         }
+        team = team->next_team;
     }
 }
 
@@ -481,7 +481,7 @@ struct team* enter_teams(struct team* team, int number_of_teams){
                 else
                 {
                     clear();
-                    printf("Captain age is \"%d\"\n to correct captain age input 'r'\n to accept captain age input any other letter\noption: ",i, age);
+                    printf("Captain age is \"%d\"\n to correct captain age input 'r'\n to accept captain age input any other letter\noption: ", age);
                     scanf(" %c",&option);
                     if(option == 'r'){
                         age = 0;
@@ -619,11 +619,8 @@ struct team* enter_teams_from_file(struct team* team, int number_of_teams){
 
     int file_teams = count_file_teams(file_name);
 
-    if(file_teams == -1){
-        clear();
-        printf("There is not such a file!!!\nfile %s not found\n", file_name);
-        sleep(SLEEP);
-        return team;
+    if(file_teams == -1){     
+       return team;
     }
 
     if(file_teams < number_of_teams){
@@ -714,18 +711,31 @@ void tournament_starter(struct team* team, int number_of_teams){
         
         int* games = calloc((rest+groups),sizeof(int));
         
+        printf("rg: %d\n", (rest+groups));
         if(rest){
             games[rand()%(rest+groups)] = -1; //free promo to next stage
         }
         
-        printf("Stage [%d]\n number of teams: %d number of matches: %d\n\n", i, number_of_teams, groups);
+        for (int k = (rest+groups); k < number_of_participating_teams; k++)
+        {
+            int fate = rand()%(rest+groups);
+            while(games[fate] != 0){
+                fate = rand()%(rest+groups);
+            }
+            games[fate] = k;
+        }
+            
+        
+        
+        printf("Stage [%d]\n number of teams: %d number of matches: %d\n\n", i, number_of_participating_teams, groups);
         number_of_participating_teams = groups + rest;
         
         for (int j = 0; j < number_of_participating_teams; j++)
         {
-            printf("[%d] team play against [%d] team\n", j+1, games[j]);
+            printf("[%d] team play against [%d] team\n", j+1, games[j]+1);
         }
         
+        printf("\n");
         free(games);
         sleep(SLEEP_LONG);
     }
