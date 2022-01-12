@@ -49,8 +49,11 @@ int how_many_teams_in_tournament(struct team*);
 int how_many_games(int);
 void print_teams(struct team*, int);
 void print_all_teams_to_file(struct team*, int);
+void renumber_teams(struct team*);
 struct team* enter_teams(struct team*, int);
 struct team* enter_teams_from_file(struct team*, int);
+struct team* delete_teams(struct team*, int);
+struct team* delete_all_teams(struct team*);
 void games_handler(struct team*, int*, int*, int);
 void tournament_starter(struct team*, int); 
 int tournament_handler(struct team**, struct team*, int);
@@ -194,11 +197,19 @@ int how_many_games(int number_of_teams)
 
 void print_teams(struct team *team, int number_of_teams)
 {
-    clear();
     int x;
     do
     {
-        printf("To printa all teams type '0'\nTo print one team type their \"team number\"\noption: ");
+        clear();
+        struct team *first_team = team;
+        while(team != NULL)
+        {
+            printf("team[%d]: %s\n", team->team_number, team->team_name);
+            team = team->next_team;
+        }
+        printf("\n");
+        team = first_team;
+        printf(" To printa all teams type '0'\n To print one team type their \"team number\"\n\noption: ");
         scanf(" %d", &x);
         if(x<0||x>number_of_teams)
         {
@@ -206,7 +217,7 @@ void print_teams(struct team *team, int number_of_teams)
             printf("Input is incorrect!!!\n the number must be in the range [0,%d]\n",number_of_teams);
             sleep(SLEEP_SHORT);
         }
-    }while(x<0);
+    }while(x<0||x>number_of_teams);
 
     while (team!=NULL)
     {
@@ -291,6 +302,17 @@ void print_all_teams_to_file(struct team *team, int number_of_teams)
         team = team->next_team;
     }
     fclose(f);
+}
+
+void renumber_teams(struct team* team)
+{
+    int i = 1;
+    while(team!=NULL)
+    {
+        team->team_number = i;
+        i++;
+        team = team->next_team;
+    }
 }
 
 struct team* enter_teams(struct team* team, int number_of_teams)
@@ -685,17 +707,16 @@ struct team* enter_teams_from_file(struct team* team, int number_of_teams)
     if(file_teams < number_of_teams)
     {
         clear();
-        printf("The file %s is damaged!!!\n teams taking part in the competition is %d\n", file_name, number_of_teams);
-        printf(" file contains %d teams\nAdd %d teams to file\n", file_teams, (number_of_teams-file_teams));
+        printf("File %s:\n teams taking part in the competition is %d\n", file_name, number_of_teams);
+        printf(" file contains %d teams!!!\n", file_teams);
         sleep(SLEEP_LONG);
-        return team;
     }
 
     FILE* f = NULL;
     f = fopen(file_name,"r");
 
     struct team* first_team = NULL;
-    for (int i = 1; i <= number_of_teams; i++)
+    for (int i = 1; i <= file_teams; i++)
     {
         printf("team[%d] loading...\n", i);
         struct team* new_team = malloc(sizeof(struct team));
@@ -762,6 +783,81 @@ struct team* enter_teams_from_file(struct team* team, int number_of_teams)
     return first_team;        
 }
 
+struct team* delete_teams(struct team* team, int number_of_teams)
+{
+    int x;
+    do
+    {
+        clear();
+        struct team *first_team = team;
+        while(team != NULL)
+        {
+            printf("team[%d]: %s\n", team->team_number, team->team_name);
+            team = team->next_team;
+        }
+        printf("\n");
+        team = first_team;
+        printf("To delete all teams type '0'\nTo delete one team type their \"team number\"\noption: ");
+        scanf(" %d", &x);
+        if(x<0||x>number_of_teams)
+        {
+            clear();
+            printf("Input is incorrect!!!\n the number must be in the range [0,%d]\n",number_of_teams);
+            sleep(SLEEP_SHORT);
+        }
+    }while(x<0 || x>number_of_teams);
+
+    if(x == 0)
+    {
+        struct team *tmp = team;
+        while(tmp)
+        {
+            struct team *delete_team = tmp;
+            tmp = tmp->next_team;
+            free(delete_team);
+        }
+        return tmp;
+    }
+    else
+    {
+        if(!team) return team;
+        if(team->team_number == x)
+        {
+            struct team *delete_team = team;
+            team = team->next_team;
+            free(delete_team);
+            return team;
+        }
+        
+        struct team *tmp = team, *tmp_next = team->next_team;
+        while(tmp_next!=NULL)
+        {
+            if(tmp_next->team_number == x)
+            {   
+                struct team *delete_team = tmp_next;
+                tmp->next_team = tmp_next->next_team;
+                free(delete_team);
+                break;
+            }
+            tmp = tmp->next_team;
+            tmp_next = tmp->next_team;
+        }
+        return team;
+    }
+}
+
+struct team* delete_all_teams(struct team* team)
+{
+    struct team *tmp = team;
+    while(tmp)
+    {
+        struct team *delete_team = tmp;
+        tmp = tmp->next_team;
+        free(delete_team);
+    }
+    return tmp;
+}
+
 void games_handler(struct team* team, int* games, int* queue, int number_of_teams)
 {
     //clear();
@@ -790,16 +886,16 @@ void games_handler(struct team* team, int* games, int* queue, int number_of_team
             team=team->next_team;
         }
         team = first_team;
-        printf("team %d vs %d\n", i+1, games[i]+1);
-        printf("team:%d team_number %d team_name %s\n", i+1, queue[i], first_team_name);
+        printf(" team[%s] vs ", first_team_name);
         if(games[i] != -1)
         {
-            printf("team[%d] team_number %d team_name %s\n", games[i]+1, queue[games[i]], second_team_name);
+            printf("team[%s] \n", second_team_name);
         }
         else
         {
-            printf("teams[%d] team_number none\n", games[i]+1);
+            printf("none \n");
         }
+        printf("\n");
     }
     
 }
@@ -814,7 +910,6 @@ void tournament_starter(struct team* team, int number_of_teams)
     for (int i = 1; number_of_participating_teams >= 2; i++)
     {
         clear();
-        printf("numbr of participating teams: %d\n\n", number_of_participating_teams);
         int* queue = calloc(number_of_participating_teams,sizeof(int));
         
         int number = 0;
@@ -823,7 +918,7 @@ void tournament_starter(struct team* team, int number_of_teams)
             if(team->in_tournament)
             {
                 queue[number] = team->team_number;
-                printf("team[%d]: %s\n", number+1, team->team_name);
+                //printf("team[%d]: %s\n", number+1, team->team_name);
                 number++;
             }
             if(number == number_of_participating_teams)
@@ -853,13 +948,7 @@ void tournament_starter(struct team* team, int number_of_teams)
             games[fate] = k;
         }
             
-        printf("Stage [%d]\n number of teams: %d number of matches: %d\n\n", i, number_of_participating_teams, groups);
-        
-        for (int j = 0; j < (groups+rest); j++)
-        {
-            printf("[%d] team play against [%d] team\n", j+1, games[j]+1);
-        }
-        printf("\n");
+        printf("Stage [%d]: \n\n", i);
 
         games_handler(first_team, games, queue,number_of_participating_teams);
 
@@ -879,8 +968,10 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
     char input[2];
     do
     {
+        int entered_teams = how_many_teams_in_tournament(team);
         clear();
-        printf("%d teams take part in the competition \n\n", number_of_teams);
+        printf("%d teams take part in the competition \n", number_of_teams);
+        printf("%d teams entered the competition \n\n", entered_teams);
         
         printf(" Input 'n' to display number of games during the contets\n");
         printf(" Input 'e' to enter participating teams from keyboard\n");
@@ -890,7 +981,8 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
         
         if(team != NULL)
         {
-            printf(" Input 'd' to display participating team\n");
+            printf(" Input 'p' to display participating team\n");
+            printf(" Input 'd' to delete participating team\n");
             printf(" Input 't' to start the tournament\n");
             printf(" Input 's' to save participating teams to file\n");
         }
@@ -928,6 +1020,8 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
                 break;
 
                 case 'x':
+                    team = delete_all_teams(team);
+                    (*first_team) = team;
                     ok = true;
                 break;
 
@@ -941,16 +1035,22 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
                     {
                         switch (input[0])
                         {
+                            case 'p':
+                                print_teams(team, entered_teams);
+                            break;
+
                             case 'd':
-                                print_teams(team, number_of_teams);
+                                team = delete_teams(team, number_of_teams);
+                                (*first_team) = team;
+                                renumber_teams(team);
                             break;
 
                             case 't':
-                                tournament_starter(team, number_of_teams);
+                                tournament_starter(team, entered_teams);
                             break;
 
                             case 's':
-                                print_all_teams_to_file(team, number_of_teams);
+                                print_all_teams_to_file(team, entered_teams);
                             break;
 
                             default:
