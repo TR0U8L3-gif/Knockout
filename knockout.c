@@ -41,7 +41,6 @@ struct team
     struct team* next_team;
 };
 
-
 void clear(void);
 int count_file_teams(char[]);
 int how_many_teams(void);
@@ -50,7 +49,7 @@ int how_many_games(int);
 void print_teams(struct team*, int);
 void print_all_teams_to_file(struct team*, int);
 void renumber_teams(struct team*);
-struct team* enter_teams(struct team*, int);
+struct team* enter_teams(struct team*, int, int);
 struct team* enter_teams_from_file(struct team*, int);
 struct team* delete_teams(struct team*, int);
 struct team* delete_all_teams(struct team*);
@@ -315,11 +314,30 @@ void renumber_teams(struct team* team)
     }
 }
 
-struct team* enter_teams(struct team* team, int number_of_teams)
+struct team* enter_teams(struct team* team, int number_of_teams, int number_of_added_teams)
 {
     clear();
-    struct team* first_team = NULL;
-    for (int i = 1; i <= number_of_teams; i++)
+    struct team* first_team = team;
+    
+    int remaining_teams = number_of_teams;
+    while (team != NULL)
+    {
+        remaining_teams--;
+        team = team->next_team;
+    }
+    team = first_team;
+    if(remaining_teams == 0){
+        printf("All slots are taken!!!\n");
+        sleep(SLEEP);
+        return first_team;
+    }
+    else if(number_of_added_teams>remaining_teams){
+        printf(" %d slots reamin!!!\n", remaining_teams);
+        sleep(SLEEP);
+        number_of_added_teams = remaining_teams;
+    }
+    clear();
+    for (int i = 1; i <= number_of_added_teams; i++)
     {
         struct team* new_team = malloc(sizeof(struct team));
         new_team->in_tournament = true;
@@ -709,14 +727,15 @@ struct team* enter_teams_from_file(struct team* team, int number_of_teams)
         clear();
         printf("File %s:\n teams taking part in the competition is %d\n", file_name, number_of_teams);
         printf(" file contains %d teams!!!\n", file_teams);
+        number_of_teams = file_teams;
         sleep(SLEEP_LONG);
     }
 
     FILE* f = NULL;
     f = fopen(file_name,"r");
 
-    struct team* first_team = NULL;
-    for (int i = 1; i <= file_teams; i++)
+    struct team* first_team = team;
+    for (int i = 1; i <= number_of_teams; i++)
     {
         printf("team[%d] loading...\n", i);
         struct team* new_team = malloc(sizeof(struct team));
@@ -974,6 +993,7 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
         printf("%d teams entered the competition \n\n", entered_teams);
         
         printf(" Input 'n' to display number of games during the contets\n");
+        printf(" Input 'a' to add team to competition from keyboard\n");
         printf(" Input 'e' to enter participating teams from keyboard\n");
         printf(" Input 'l' to load participating teams from file\n");
         printf(" Input 'r' to restart program\n");
@@ -1005,14 +1025,22 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
                     how_many_games(number_of_teams);
                 break;
 
-                case 'e':
-                   team = enter_teams(team, number_of_teams);
+                case 'a':
+                   team = enter_teams(team, number_of_teams, 1);
                    (*first_team) = team; 
+                   renumber_teams(team);
+                break;
+
+                case 'e':
+                   team = enter_teams(team, number_of_teams, number_of_teams);
+                   (*first_team) = team; 
+                   renumber_teams(team);
                 break;
 
                 case 'l':
                     team = enter_teams_from_file(team, number_of_teams);
                     (*first_team) = team; 
+                    renumber_teams(team);
                 break;
 
                 case 'r':
