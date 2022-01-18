@@ -42,6 +42,8 @@ struct team
 };
 
 void clear(void);
+void clear_buffer(void);
+bool for_sure(char);
 int count_file_teams(char[]);
 int how_many_teams(void);
 int how_many_teams_in_tournament(struct team*);
@@ -84,6 +86,54 @@ void clear(void)
 	#else
 	    printf("\n");
 	#endif
+}
+
+void clear_buffer(void)
+{
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+bool for_sure(char option)
+{
+    do
+    {
+        char decide[MAX];   
+        clear();
+        printf("Are you sure you want to  perform [%c] action y/n: ", option);
+        
+        while(1) 
+        {
+            clear_buffer();
+            if (scanf("%[^\n]", decide) != 1) ;
+            else 
+            {
+                break;
+            }
+        }
+         if(strlen(decide) != 1)
+        {
+            clear();
+            printf("type 'y' to accept or 'n' to reject\n");
+            sleep(SLEEP);
+        }
+        else if((decide[0] != 'y' && decide[0] != 'n')){
+            clear();
+            printf("type 'y' to accept or 'n' to reject\n");
+            sleep(SLEEP);
+        }
+        else
+        {
+            if(decide[0] == 'y')
+            {
+                return true;
+            }
+            if(decide[0] == 'n')
+            {
+                return false;
+            }
+        }
+    }while (1);
 }
 
 int count_file_teams(char file_name[MAX])
@@ -196,7 +246,7 @@ int how_many_games(int number_of_teams)
 
 void print_teams(struct team *team, int number_of_teams)
 {
-    int x;
+    int x = 0;
     do
     {
         clear();
@@ -208,17 +258,17 @@ void print_teams(struct team *team, int number_of_teams)
         }
         printf("\n");
         team = first_team;
-        printf(" To printa all teams type '0'\n To print one team type their \"team number\"\n\noption: ");
+        printf(" To printa all teams type '0'\n To print one team type their \"team number\"\n To exit type '-1'\n\noption: ");
         scanf(" %d", &x);
-        if(x<0||x>number_of_teams)
+        if(x<-1||x>number_of_teams)
         {
             clear();
-            printf("Input is incorrect!!!\n the number must be in the range [0,%d]\n",number_of_teams);
-            sleep(SLEEP_SHORT);
+            printf("Input is incorrect!!!\n the number must be in the range [0,%d] or type '-1' to exit\n",number_of_teams);
+            sleep(SLEEP);
         }
-    }while(x<0||x>number_of_teams);
+    }while(x<-1||x>number_of_teams);
 
-    while (team!=NULL)
+    while (team!=NULL && (x != 1))
     {
         if(team->team_number == x || x==0)
         {
@@ -836,17 +886,21 @@ struct team* delete_teams(struct team* team, int number_of_teams)
         }
         printf("\n");
         team = first_team;
-        printf("To delete all teams type '0'\nTo delete one team type their \"team number\"\noption: ");
+        printf(" To delete all teams type '0'\n To delete one team type their \"team number\"\n To exit type '-1'\n\noption: ");
         scanf(" %d", &x);
-        if(x<0||x>number_of_teams)
+        if(x<-1||x>number_of_teams)
         {
             clear();
-            printf("Input is incorrect!!!\n the number must be in the range [0,%d]\n",number_of_teams);
-            sleep(SLEEP_SHORT);
+            printf("Input is incorrect!!!\n the number must be in the range [0,%d] or type '-1' to exit\n",number_of_teams);
+            sleep(SLEEP);
         }
-    }while(x<0 || x>number_of_teams);
+    }while(x<-1||x>number_of_teams);
 
-    if(x == 0)
+    if(x == -1)
+    {
+        return team;
+    }
+    else if(x == 0)
     {
         struct team *tmp = team;
         while(tmp)
@@ -1004,7 +1058,7 @@ void tournament_starter(struct team* team, int number_of_teams)
 int tournament_handler(struct team** first_team, struct team* team, int number_of_teams)
 {
     bool ok = false;
-    char input[2];
+    char input[MAX];
     do
     {
         int entered_teams = how_many_teams_in_tournament(team);
@@ -1046,6 +1100,7 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
                 break;
 
                 case 'a':
+                    if(for_sure('a'))
                     {
                         bool ok = false;
                         do
@@ -1071,25 +1126,35 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
                 break;
 
                 case 'e':
-                    team = enter_teams(team, number_of_teams, number_of_teams);
-                    (*first_team) = team; 
-                    renumber_teams(team);
+                    if(for_sure('e'))
+                    {
+                        team = enter_teams(team, number_of_teams, number_of_teams);
+                        (*first_team) = team; 
+                        renumber_teams(team);
+                    }
                 break;
 
                 case 'l':
-                    team = enter_teams_from_file(team, number_of_teams, number_of_teams);
-                    (*first_team) = team; 
-                    renumber_teams(team);
+                    if(for_sure('l'))
+                    {
+                        team = enter_teams_from_file(team, number_of_teams, number_of_teams);
+                        (*first_team) = team; 
+                        renumber_teams(team);
+                    }
                 break;
 
                 case 'r':
+                    if(for_sure('r'))
                     return 1;
                 break;
 
                 case 'x':
-                    team = delete_all_teams(team);
-                    (*first_team) = team;
-                    ok = true;
+                    if(for_sure('x'))
+                    {
+                        team = delete_all_teams(team);
+                        (*first_team) = team;
+                        ok = true;
+                    }
                 break;
 
                 default:
@@ -1113,11 +1178,17 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
                             break;
 
                             case 't':
-                                tournament_starter(team, entered_teams);
+                                if(for_sure('t'))
+                                {
+                                    tournament_starter(team, entered_teams);
+                                }
                             break;
 
                             case 's':
-                                print_all_teams_to_file(team, entered_teams);
+                                if(for_sure('s'))
+                                {
+                                    print_all_teams_to_file(team, entered_teams);
+                                }
                             break;
 
                             default:
@@ -1129,8 +1200,7 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
                 break;
             }      
         }
-    }
-    while(!ok);
+    }while(!ok);
 
     return 0;
 }
