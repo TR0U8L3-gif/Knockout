@@ -41,6 +41,16 @@ struct team
     struct team* next_team;
 };
 
+struct match
+{
+    char first_team_name[MAX];
+    char second_team_name[MAX];
+    int first_team_score;
+    int second_team_score;
+    int match_number;
+    struct match* next_match;
+};
+
 void clear(void);
 void clear_buffer(void);
 int accept(void);
@@ -56,9 +66,9 @@ struct team* enter_teams(struct team*, int, int);
 struct team* enter_teams_from_file(struct team*, int, int);
 struct team* delete_teams(struct team*, int);
 struct team* delete_all_teams(struct team*);
-void games_handler(struct team*, int*, int*, int);
-void tournament_starter(struct team*, int); 
-int tournament_handler(struct team**, struct team*, int);
+void games_handler(struct team*, int*, int*, int, struct match**, struct match*);
+void tournament_starter(struct team*, int, struct match**, struct match*); 
+int tournament_handler(struct team**, struct team*, int, struct match**, struct match*);
 
 int main()
 {
@@ -66,10 +76,11 @@ int main()
     int participating_teams;
     struct team* first_team = NULL;
     struct team** first_team_address = &first_team;
-    
+    struct match* first_match = NULL;
+    struct match** first_match_address = &first_match;
     restart:
         participating_teams = how_many_teams();
-        re_start = tournament_handler(first_team_address, first_team, participating_teams);
+        re_start = tournament_handler(first_team_address, first_team, participating_teams, first_match_address, first_match);
     if(re_start == 1)
     {
         goto restart;
@@ -1117,7 +1128,7 @@ struct team* delete_all_teams(struct team* team)
     return tmp;
 }
 
-void games_handler(struct team* team, int* games, int* queue, int number_of_teams)
+void games_handler(struct team* team, int* games, int* queue, int number_of_teams, struct match** first_match, struct match* match)
 {
     //clear();
     int rest = number_of_teams % 2;
@@ -1159,7 +1170,7 @@ void games_handler(struct team* team, int* games, int* queue, int number_of_team
     
 }
 
-void tournament_starter(struct team* team, int number_of_teams)
+void tournament_starter(struct team* team, int number_of_teams, struct match** first_match, struct match* match)
 {
     srand(time(NULL));
     
@@ -1209,7 +1220,7 @@ void tournament_starter(struct team* team, int number_of_teams)
             
         printf("Stage [%d]: \n\n", i);
 
-        games_handler(first_team, games, queue,number_of_participating_teams);
+        games_handler(first_team, games, queue,number_of_participating_teams, first_match, match);
 
         number_of_participating_teams = groups + rest;
         team = first_team;
@@ -1221,7 +1232,7 @@ void tournament_starter(struct team* team, int number_of_teams)
     }
 }
 
-int tournament_handler(struct team** first_team, struct team* team, int number_of_teams)
+int tournament_handler(struct team** first_team, struct team* team, int number_of_teams, struct match** first_match, struct match* match)
 {
     bool ok = false;
     char input[MAX];
@@ -1236,7 +1247,7 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
         printf(" Input 'a' to add one team to competition\n");
         printf(" Input 'e' to enter participating teams from keyboard\n");
         printf(" Input 'l' to load participating teams from file\n");
-        printf(" Input 'r' to restart program\n");
+        printf(" Input 'r' to re-enter number of participating teams\n");
         printf(" Input 'x' to exit program\n");
         
         if(team != NULL)
@@ -1245,6 +1256,11 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
             printf(" Input 'd' to delete participating team\n");
             printf(" Input 't' to start the tournament\n");
             printf(" Input 's' to save participating teams to file\n");
+        }
+        if(match != NULL)
+        {
+            printf(" Input 'm' to display results of recent matches\n");
+            printf(" Input 'w' to display winning team of the last competition\n");
         }
         printf("\noption: ");
         
@@ -1258,7 +1274,6 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
         else
         {
             clear();
-            //printf("input: %c\n", input[0]);
             switch (input[0])
             {
                 case 'n':
@@ -1312,8 +1327,6 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
                 case 'r':
                     if(for_sure('r'))
                     {
-                        team = delete_all_teams(team);
-                        (*first_team) = team;
                         return 1;
                     }
                 break;
@@ -1324,6 +1337,22 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
                         team = delete_all_teams(team);
                         (*first_team) = team;
                         ok = true;
+                    }
+                break;
+
+                case 'm':
+                    if(match == NULL)
+                    {
+                        printf("Incorect input!!!\n there is not [%c] option\n", input[0]);
+                        sleep(SLEEP_SHORT); 
+                    }                         
+                break;
+
+                case 'w':
+                    if(match == NULL)
+                    {
+                        printf("Incorect input!!!\n there is not [%c] option\n", input[0]);
+                        sleep(SLEEP_SHORT); 
                     }
                 break;
 
@@ -1350,7 +1379,7 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
                             case 't':
                                 if(for_sure('t'))
                                 {
-                                    tournament_starter(team, entered_teams);
+                                    tournament_starter(team, entered_teams, first_match, match);
                                 }
                             break;
 
@@ -1361,7 +1390,7 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
                                 }
                             break;
 
-                            default:
+                            default:        
                                 printf("Incorect input!!!\n there is not [%c] option\n", input[0]);
                                 sleep(SLEEP_SHORT);
                             break;
