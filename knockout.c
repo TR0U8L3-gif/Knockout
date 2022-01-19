@@ -43,6 +43,7 @@ struct team
 
 void clear(void);
 void clear_buffer(void);
+int accept(void);
 bool for_sure(char);
 int count_file_teams(char[]);
 int how_many_teams(void);
@@ -94,33 +95,45 @@ void clear_buffer(void)
     while ((c = getchar()) != '\n' && c != EOF);
 }
 
+int accept(void)
+{
+    clear_buffer();
+    char option[MAX];
+    scanf(" %[^\n]", option);
+    if(strlen(option)!=1)
+    {
+        return -1;
+    }
+    else if(option[0] != 'r')
+    {
+        return 1;
+    }  
+    clear_buffer();
+    return 0;
+}
+
 bool for_sure(char option)
 {
+    clear_buffer();
+    char decide[MAX];  
     do
-    {
-        char decide[MAX];   
+    { 
         clear();
         printf("Are you sure you want to  perform [%c] action y/n: ", option);
+        scanf("%[^\n]", decide);
         
-        while(1) 
-        {
-            clear_buffer();
-            if (scanf("%[^\n]", decide) != 1) ;
-            else 
-            {
-                break;
-            }
-        }
-         if(strlen(decide) != 1)
+        if(strlen(decide) != 1)
         {
             clear();
             printf("type 'y' to accept or 'n' to reject\n");
-            sleep(SLEEP);
+            clear_buffer();
+            sleep(SLEEP_SHORT);
         }
         else if((decide[0] != 'y' && decide[0] != 'n')){
             clear();
             printf("type 'y' to accept or 'n' to reject\n");
-            sleep(SLEEP);
+            clear_buffer();
+            sleep(SLEEP_SHORT);
         }
         else
         {
@@ -133,6 +146,7 @@ bool for_sure(char option)
                 return false;
             }
         }
+    
     }while (1);
 }
 
@@ -196,9 +210,22 @@ int how_many_teams(void)
     int teams;
     do
     {
-        clear();
-        printf("Enter the number of teams participating in the tournament: ");
-        scanf("%d", &teams);
+        while(1)
+        {
+            clear();
+            printf("Enter the number of teams participating in the tournament: ");
+            if(scanf("%d", &teams)!=1)
+            {
+                clear();
+                printf("Incorrect input!!!\n please enter number\n");
+                clear_buffer();
+                sleep(SLEEP_SHORT);    
+            }
+            else
+            {
+                break;
+            }
+        }
         if (teams <=1)
         {
             clear();
@@ -249,17 +276,31 @@ void print_teams(struct team *team, int number_of_teams)
     int x = 0;
     do
     {
-        clear();
-        struct team *first_team = team;
-        while(team != NULL)
+        do
         {
-            printf("team[%d]: %s\n", team->team_number, team->team_name);
-            team = team->next_team;
+            clear();
+            struct team *first_team = team;
+            while(team != NULL)
+            {
+                printf("team[%d]: %s\n", team->team_number, team->team_name);
+                team = team->next_team;
+            }
+            printf("\n");
+            team = first_team;
+            printf(" To printa all teams type '0'\n To print one team type their \"team number\"\n To exit type '-1'\n\noption: ");
+            if(scanf(" %d", &x)!=1)
+            {
+                printf("Incorrect input\n");
+                sleep(SLEEP_SHORT);
+            }
+            else
+            {
+                break;
+            }
+            clear_buffer();
         }
-        printf("\n");
-        team = first_team;
-        printf(" To printa all teams type '0'\n To print one team type their \"team number\"\n To exit type '-1'\n\noption: ");
-        scanf(" %d", &x);
+        while (1);
+        
         if(x<-1||x>number_of_teams)
         {
             clear();
@@ -304,7 +345,6 @@ void print_all_teams_to_file(struct team *team, int number_of_teams)
     bool ok = false;
     do
     {
-        char option[2];
         clear();
         printf("Input file name where participating teams will be saved\nfile name (without .txt): ");
         scanf(" %[^\n]",file_name);
@@ -319,20 +359,19 @@ void print_all_teams_to_file(struct team *team, int number_of_teams)
             clear();
             strcat(file_name,".txt");
             printf("File to save teams: %s\n",file_name);
-            printf(" to correct file name input 'r'\n to accept file name input any other letter\noption: ");
-            scanf(" %[^\n]", option);
-            if(strlen(option)>1)
+            printf(" to correct file name input 'r'\n to accept file name input any other character\noption: ");
+            int option = 0;
+            do
             {
-               clear();
-                printf("Incorrect input!!!\n pleas enter one letter\n");
-                sleep(SLEEP_SHORT); 
-            }
-            else{
-                if(option[0] != 'r')
+                option = accept();
+                if(option == -1)
                 {
-                    ok = true;
+                    printf(" Incorrect input\noption: ");
                 }
-            }
+            } 
+            while(option == -1);
+            
+            ok = (bool)option;
         }
     }while(!ok);
     
@@ -400,7 +439,6 @@ struct team* enter_teams(struct team* team, int number_of_teams, int number_of_a
             bool ok = false;
             do
             {
-                char option;
                 clear();
                 printf("Enter team[%d] name: ",i);
                 scanf(" %[^\n]",name);
@@ -413,12 +451,19 @@ struct team* enter_teams(struct team* team, int number_of_teams, int number_of_a
                 else
                 {
                     clear();
-                    printf("Team[%d] name is \"%s\"\n to correct team name input 'r'\n to accept team name input any other letter\noption: ",i,name);
-                    scanf(" %c",&option);
-                    if(option != 'r')
+                    printf("Team[%d] name is \"%s\"\n to correct team name input 'r'\n to accept team name input any other character\noption: ",i,name);
+                    int option = 0;
+                    do
                     {
-                        ok = true;
-                    }
+                        option = accept();
+                        if(option == -1)
+                        {
+                            printf(" Incorrect input\noption: ");
+                        }
+                    } 
+                    while(option == -1);
+                    
+                    ok = (bool)option;
                 }
             }while(!ok);
             strcpy(new_team->team_name, name);
@@ -429,7 +474,6 @@ struct team* enter_teams(struct team* team, int number_of_teams, int number_of_a
             bool ok = false;
             do
             {
-                char option;
                 clear();
                 printf("Enter team[%d] city: ",i);
                 scanf(" %[^\n]",city);
@@ -442,12 +486,19 @@ struct team* enter_teams(struct team* team, int number_of_teams, int number_of_a
                 else
                 {
                     clear();
-                    printf("Team[%d] city is \"%s\"\n to correct city name input 'r'\n to accept city name input any other letter\noption: ",i,city);
-                    scanf(" %c",&option);
-                    if(option != 'r')
+                    printf("Team[%d] city is \"%s\"\n to correct city name input 'r'\n to accept city name input any other character\noption: ",i,city);
+                    int option = 0;
+                    do
                     {
-                        ok = true;
-                    }
+                        option = accept();
+                        if(option == -1)
+                        {
+                            printf(" Incorrect input\noption: ");
+                        }
+                    } 
+                    while(option == -1);
+                    
+                    ok = (bool)option;
                 }
             }while(!ok);
             strcpy(new_team->team_city, city);
@@ -458,7 +509,6 @@ struct team* enter_teams(struct team* team, int number_of_teams, int number_of_a
             bool ok = false;
             do
             {
-                char option;
                 clear();
                 printf("Enter team[%d] website: ",i);
                 scanf(" %[^\n]",website);
@@ -471,12 +521,19 @@ struct team* enter_teams(struct team* team, int number_of_teams, int number_of_a
                 else
                 {
                     clear();
-                    printf("Team[%d] website is \"%s\"\n to correct team website name input 'r'\n to accept team website name input any other letter\noption: ",i,website);
-                    scanf(" %c",&option);
-                    if(option != 'r')
+                    printf("Team[%d] website is \"%s\"\n to correct team website name input 'r'\n to accept team website name input any other character\noption: ",i,website);
+                    int option = 0;
+                    do
                     {
-                        ok = true;
-                    }
+                        option = accept();
+                        if(option == -1)
+                        {
+                            printf(" Incorrect input\noption: ");
+                        }
+                    } 
+                    while(option == -1);
+                    
+                    ok = (bool)option;
                 }
             }while(!ok);
             strcpy(new_team->team_websie, website);
@@ -487,7 +544,6 @@ struct team* enter_teams(struct team* team, int number_of_teams, int number_of_a
             bool ok = false;
             do
             {
-                char option;
                 clear();
                 printf("Enter team[%d] email: ",i);
                 scanf(" %[^\n]",email);
@@ -500,52 +556,79 @@ struct team* enter_teams(struct team* team, int number_of_teams, int number_of_a
                 else
                 {
                     clear();
-                    printf("Team[%d] email is \"%s\"\n to correct team email input 'r'\n to accept team email input any other letter\noption: ",i,email);
-                    scanf(" %c",&option);
-                    if(option != 'r')
+                    printf("Team[%d] email is \"%s\"\n to correct team email input 'r'\n to accept team email input any other character\noption: ",i,email);
+                    int option = 0;
+                    do
                     {
-                        ok = true;
-                    }
+                        option = accept();
+                        if(option == -1)
+                        {
+                            printf(" Incorrect input\noption: ");
+                        }
+                    } 
+                    while(option == -1);
+                    
+                    ok = (bool)option;
                 }
             }while(!ok);
             strcpy(new_team->team_email, email);
         }
 
-
+        
         int team_members;
-        do
         {
-            char option;
-            clear();
-            printf("Enter how many players team[%d] has: ",i);
-            scanf("%d", &team_members);
-            if (team_members < 1)
+            bool ok = false; 
+            do
             {
-                clear();
-                printf("A team must have one or more players!!!\n");
-                sleep(SLEEP_SHORT);
-            }
-            else
-            {
-                clear();
-                printf("Team[%d] size is \"%d\"\n to correct team size input 'r'\n to accept team size input any other letter\noption: ",i, team_members);
-                scanf(" %c",&option);
-                if(option == 'r')
+                do
                 {
-                    team_members = 0;
+                    clear();
+                    printf("Enter how many players team[%d] has: ",i);
+                    if(scanf("%d", &team_members)!=1)
+                    {
+                        printf("Incorrect input\n");
+                        sleep(SLEEP_SHORT);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                    clear_buffer();
                 }
-            }
-        } while (team_members<1);
-
-        new_team->team_size = team_members;
-
+                while (1);
+                
+                if (team_members < 1)
+                {
+                    clear();
+                    printf("A team must have one or more players!!!\n");
+                    sleep(SLEEP_SHORT);
+                }
+                else
+                {
+                    clear();
+                    printf("Team[%d] size is \"%d\"\n to correct team size input 'r'\n to accept team size input any other character\noption: ",i, team_members);
+                    int option = 0;
+                    do
+                    {
+                        option = accept();
+                        if(option == -1)
+                        {
+                            printf(" Incorrect input\noption: ");
+                        }
+                    } 
+                    while(option == -1);
+                        
+                    ok = (bool)option;
+                }
+            } while (!ok);
+            new_team->team_size = team_members;
+        }
         // input data about team captain
         {
             char name[MAX];
             bool ok = false;
             do
             {
-                char option;
                 clear();
                 printf("Enter team[%d] captain name: ",i);
                 scanf(" %[^\n]",name);
@@ -558,12 +641,19 @@ struct team* enter_teams(struct team* team, int number_of_teams, int number_of_a
                 else
                 {
                     clear();
-                    printf("Team[%d] captain name is \"%s\"\n to correct team captain name input 'r'\n to accept team captain name input any other letter\noption: ",i,name);
-                    scanf(" %c",&option);
-                    if(option != 'r')
+                    printf("Team[%d] captain name is \"%s\"\n to correct team captain name input 'r'\n to accept team captain name input any other character\noption: ",i,name);
+                    int option = 0;
+                    do
                     {
-                        ok = true;
-                    }
+                        option = accept();
+                        if(option == -1)
+                        {
+                            printf(" Incorrect input\noption: ");
+                        }
+                    } 
+                    while(option == -1);
+                    
+                    ok = (bool)option;
                 }
             }while(!ok);
             strcpy(new_team->captain.player_name, name);
@@ -574,7 +664,6 @@ struct team* enter_teams(struct team* team, int number_of_teams, int number_of_a
             bool ok = false;
             do
             {
-                char option;
                 clear();
                 printf("Enter team[%d] captain surname: ",i);
                 scanf(" %[^\n]",surname);
@@ -586,12 +675,19 @@ struct team* enter_teams(struct team* team, int number_of_teams, int number_of_a
                 else
                 {
                     clear();
-                    printf("Team[%d] captain surname is \"%s\"\n to correct team captain surname input 'r'\n to accept team captain surname input any other letter\noption: ",i,surname);
-                    scanf(" %c",&option);
-                    if(option != 'r')
+                    printf("Team[%d] captain surname is \"%s\"\n to correct team captain surname input 'r'\n to accept team captain surname input any other character\noption: ",i,surname);
+                    int option = 0;
+                    do
                     {
-                        ok = true;
-                    }
+                        option = accept();
+                        if(option == -1)
+                        {
+                            printf(" Incorrect input\noption: ");
+                        }
+                    } 
+                    while(option == -1);
+                    
+                    ok = (bool)option;
                 }
             }while(!ok);
             strcpy(new_team->captain.player_surname, surname);
@@ -599,12 +695,25 @@ struct team* enter_teams(struct team* team, int number_of_teams, int number_of_a
 
         {
             int age;
+            bool ok = false;
             do
             {
-                char option;
-                clear();
-                printf("Enter team[%d] captain age: ",i);
-                scanf("%d", &age);
+                do
+                {
+                    clear();
+                    printf("Enter team[%d] captain age: ",i);
+                    if(scanf("%d", &age) != 1)
+                        {
+                            printf("Incorrect input\n");
+                            sleep(SLEEP_SHORT);
+                        }
+
+                    else
+                    {
+                        break;
+                    }
+                    clear_buffer();
+                } while (1);
                 if (age < 1)
                 {
                     clear();
@@ -614,14 +723,21 @@ struct team* enter_teams(struct team* team, int number_of_teams, int number_of_a
                 else
                 {
                     clear();
-                    printf("Captain age is \"%d\"\n to correct captain age input 'r'\n to accept captain age input any other letter\noption: ", age);
-                    scanf(" %c",&option);
-                    if(option == 'r')
+                    printf("Captain age is \"%d\"\n to correct captain age input 'r'\n to accept captain age input any other character\noption: ", age);
+                    int option = 0;
+                    do
                     {
-                        age = 0;
-                    }
+                        option = accept();
+                        if(option == -1)
+                        {
+                            printf(" Incorrect input\noption: ");
+                        }
+                    } 
+                    while(option == -1);
+                    
+                    ok = (bool)option;
                 }
-            } while (age<1);
+            } while (!ok);
 
             new_team->captain.player_age = age;
         }
@@ -648,12 +764,19 @@ struct team* enter_teams(struct team* team, int number_of_teams, int number_of_a
                 else
                 {
                     clear();
-                    printf("Team[%d] player[%d] name is \"%s\"\n to correct player name input 'r'\n to accept player name input any other letter\noption: ",i,j+1,name);
-                    scanf(" %c",&option);
-                    if(option != 'r')
+                    printf("Team[%d] player[%d] name is \"%s\"\n to correct player name input 'r'\n to accept player name input any other character\noption: ",i,j+1,name);
+                    int option = 0;
+                    do
                     {
-                        ok = true;
-                    }
+                        option = accept();
+                        if(option == -1)
+                        {
+                            printf(" Incorrect input\noption: ");
+                        }
+                    } 
+                    while(option == -1);
+                    
+                    ok = (bool)option;
                 }
             }while(!ok);
             strcpy(members[j].player_name, name);
@@ -664,7 +787,6 @@ struct team* enter_teams(struct team* team, int number_of_teams, int number_of_a
                 bool ok = false;
                 do
                 {
-                    char option;
                     clear();
                     printf("Enter team[%d] player[%d] surname: ",i,j+1);
                     scanf(" %[^\n]",sname);
@@ -676,11 +798,19 @@ struct team* enter_teams(struct team* team, int number_of_teams, int number_of_a
                     else
                     {
                         clear();
-                            printf("Team[%d] player[%d] surname is \"%s\"\n to correct player surname input 'r'\n to accept player surname input any other letter\noption: ",i,j+1,sname);                        scanf(" %c",&option);
-                        if(option != 'r')
+                        printf("Team[%d] player[%d] surname is \"%s\"\n to correct player surname input 'r'\n to accept player surname input any other character\noption: ",i,j+1,sname);
+                        int option = 0;
+                        do
                         {
-                            ok = true;
-                        }
+                            option = accept();
+                            if(option == -1)
+                            {
+                                printf(" Incorrect input\noption: ");
+                            }
+                        } 
+                        while(option == -1);
+                    
+                        ok = (bool)option;
                     }
                 }while(!ok);
                 strcpy(members[j].player_surname, sname);
@@ -688,12 +818,24 @@ struct team* enter_teams(struct team* team, int number_of_teams, int number_of_a
 
             {
                 int age;
+                bool ok = false;
                 do
                 {
-                    char option;
-                    clear();
-                    printf("Enter team[%d] player[%d] age: ", i, j+1);
-                    scanf("%d", &age);
+                    do
+                    {
+                        clear();
+                        printf("Enter team[%d] player[%d] age: ", i, j+1);
+                        if(scanf("%d", &age) != 1)
+                        {
+                            printf("Incorrect input\n");
+                            sleep(SLEEP_SHORT);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                        clear_buffer();
+                    } while (1);
                     if (age < 1)
                     {
                         clear();
@@ -703,14 +845,21 @@ struct team* enter_teams(struct team* team, int number_of_teams, int number_of_a
                     else
                     {
                         clear();
-                        printf("Team[%d] player[%d] age is \"%d\"\n to correct player age input 'r'\n to accept player age input any other letter\noption: ", i, j+1, age);
-                        scanf(" %c",&option);
-                        if(option == 'r')
+                        printf("Team[%d] player[%d] age is \"%d\"\n to correct player age input 'r'\n to accept player age input any other character\noption: ", i, j+1, age);
+                        int option = 0;
+                        do
                         {
-                            age = 0;
-                        }
+                            option = accept();
+                            if(option == -1)
+                            {
+                                printf(" Incorrect input\noption: ");
+                            }
+                        } 
+                        while(option == -1);
+                    
+                        ok = (bool)option;
                     }
-                } while (age<1);
+                } while (!ok);
 
                 members[j].player_age = age;
             }
@@ -756,12 +905,19 @@ struct team* enter_teams_from_file(struct team* team, int number_of_teams, int n
             clear();
             strcat(file_name,".txt");
             printf("File to read informations about teams: %s\n",file_name);
-            printf(" to correct file name input 'r'\n to accept file name input any other letter\noption: ");
-            scanf(" %c",&option);
-            if(option != 'r')
-            {
-                ok = true;
-            }
+            printf(" to correct file name input 'r'\n to accept file name input any other character\noption: ");
+            int option = 0;
+                        do
+                        {
+                            option = accept();
+                            if(option == -1)
+                            {
+                                printf(" Incorrect input\noption: ");
+                            }
+                        } 
+                        while(option == -1);
+                    
+                        ok = (bool)option;
         }
     }while(!ok); 
 
@@ -774,11 +930,7 @@ struct team* enter_teams_from_file(struct team* team, int number_of_teams, int n
 
     if(file_teams < number_of_teams)
     {
-        clear();
-        printf("File %s:\n teams taking part in the competition is %d\n", file_name, number_of_teams);
-        printf(" file contains %d teams!!!\n", file_teams);
         number_of_teams = file_teams;
-        sleep(SLEEP_LONG);
     }
 
     FILE* f = NULL;
@@ -793,14 +945,14 @@ struct team* enter_teams_from_file(struct team* team, int number_of_teams, int n
         team = team->next_team;
     }
     team = first_team;
-    if(remaining_teams == 0){
+    if(remaining_teams == 0)
+    {
         printf("All slots are taken!!!\n");
         sleep(SLEEP);
         return first_team;
     }
-    else if(number_of_added_teams>remaining_teams){
-        printf(" %d slots reamin!!!\n", remaining_teams);
-        sleep(SLEEP);
+    else if(number_of_added_teams>remaining_teams)
+    {
         number_of_added_teams = remaining_teams;
     }
 
@@ -877,17 +1029,31 @@ struct team* delete_teams(struct team* team, int number_of_teams)
     int x;
     do
     {
-        clear();
-        struct team *first_team = team;
-        while(team != NULL)
+        do
         {
-            printf("team[%d]: %s\n", team->team_number, team->team_name);
-            team = team->next_team;
+            clear();
+            struct team *first_team = team;
+            while(team != NULL)
+            {
+                printf("team[%d]: %s\n", team->team_number, team->team_name);
+                team = team->next_team;
+            }
+            printf("\n");
+            team = first_team;
+            printf(" To delete all teams type '0'\n To delete one team type their \"team number\"\n To exit type '-1'\n\noption: ");
+            if(scanf(" %d", &x) != 1)
+            {
+                printf("Incorrect input\n");
+                sleep(SLEEP_SHORT);
+            }
+            else
+            {
+                break;
+            }
+            clear_buffer();
         }
-        printf("\n");
-        team = first_team;
-        printf(" To delete all teams type '0'\n To delete one team type their \"team number\"\n To exit type '-1'\n\noption: ");
-        scanf(" %d", &x);
+        while (1);
+        
         if(x<-1||x>number_of_teams)
         {
             clear();
@@ -1086,7 +1252,7 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
         if(strlen(input)>1)
         {
             clear();
-            printf("Incorrect input!!!\n pleas enter one letter\n");
+            printf("Incorrect input!!!\n please enter one letter\n");
             sleep(SLEEP_SHORT);
         }
         else
@@ -1145,7 +1311,11 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
 
                 case 'r':
                     if(for_sure('r'))
-                    return 1;
+                    {
+                        team = delete_all_teams(team);
+                        (*first_team) = team;
+                        return 1;
+                    }
                 break;
 
                 case 'x':
