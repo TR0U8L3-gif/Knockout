@@ -45,9 +45,10 @@ struct match
 {
     char first_team_name[MAX];
     char second_team_name[MAX];
+    char winner[MAX];
+    char loser[MAX];
     int first_team_score;
     int second_team_score;
-    int match_number;
     struct match* next_match;
 };
 
@@ -66,8 +67,8 @@ struct team* enter_teams(struct team*, int, int);
 struct team* enter_teams_from_file(struct team*, int, int);
 struct team* delete_teams(struct team*, int);
 struct team* delete_all_teams(struct team*);
-void games_handler(struct team*, int*, int*, int, struct match**, struct match*);
-void tournament_starter(struct team*, int, struct match**, struct match*); 
+struct match* games_handler(struct team*, int*, int*, int, struct match*);
+struct match* tournament_starter(struct team*, int, struct match*); 
 int tournament_handler(struct team**, struct team*, int, struct match**, struct match*);
 
 int main()
@@ -277,7 +278,7 @@ int how_many_games(int number_of_teams)
         number_of_teams = groups + rest;
     }
     printf("Number of matches played in the entire tournament: %d\n", result);
-    int time = SLEEP_LONG * number_of_teams/2;
+    int time = SLEEP_LONG * number_of_teams;
     sleep(time);
     return result;
 }
@@ -1128,58 +1129,291 @@ struct team* delete_all_teams(struct team* team)
     return tmp;
 }
 
-void games_handler(struct team* team, int* games, int* queue, int number_of_teams, struct match** first_match, struct match* match)
+struct match* games_handler(struct team* team, int* games, int* queue, int number_of_participating_teams, struct match* match)
 {
-    //clear();
-    int rest = number_of_teams % 2;
-    int groups = number_of_teams / 2;
+
+    int rest = number_of_participating_teams % 2;
+    int groups = number_of_participating_teams / 2;
     int matches = rest + groups;
-    //printf("%d\n", matches);
     struct team* first_team = team;
     
-    char first_team_name[MAX];
-    char second_team_name[MAX];
-   
+    // score enter
+    char input[MAX];
+    {
+        bool ok = false;
+        do
+        {
+            printf(" to enter scores from keyboard input 'e'\n");
+            printf(" to enter scores randomly 'r'\n");
+            printf("option: ");
+            scanf(" %[^\n]", input);
+            if(strlen(input)!=1)
+            {
+                clear();
+                printf("Incorrect input!!!\n");
+            }    
+            if(input[0] == 'r' || input[0] == 'e'){
+                ok = true;
+            }
+        } 
+        while (!ok);  
+    }
 
     for(int i = 0; i < matches; i++)
     {
+        clear();
+        struct match* new_match = malloc(sizeof(struct match));
+        new_match->next_match = NULL;
         while(team != NULL)
         {
             if(team->team_number == queue[i])
             {
-                strcpy(first_team_name,team->team_name);
+                strcpy(new_match->first_team_name,team->team_name);
+                printf("team[%d]: %s\n", queue[i], team->team_name);
             }
             if(team->team_number == queue[games[i]])
             {
-                strcpy(second_team_name,team->team_name);
+                strcpy(new_match->second_team_name,team->team_name);
+                printf("team[%d]: %s\n", queue[games[i]], team->team_name);
             }
             team=team->next_team;
         }
-        team = first_team;
-        printf(" team[%s] vs ", first_team_name);
-        if(games[i] != -1)
+        if(games[i] == -1)
         {
-            printf("team[%s] \n", second_team_name);
+            strcpy(new_match->second_team_name, "none");
+            printf("team[%d]: %s\n", 0, "none");
+        }   
+        team = first_team;
+
+        printf("\n");
+        sleep(SLEEP);
+
+        //scoring
+        if(input[0] == 'e')
+        {
+            if(games[i] != -1)
+            {
+                int first_team_score = new_match->first_team_score;
+                int second_team_score = new_match->second_team_score;
+                if(first_team_score >= 0)
+                {
+                    bool ok = false;
+                    do
+                    {
+                        do
+                        {
+                            clear();
+                            printf(" Enter %s score: ", new_match->first_team_name);
+                            if(scanf("%d", &first_team_score) != 1)
+                                {
+                                    printf("Incorrect input\n");
+                                    sleep(SLEEP_SHORT);
+                                }
+
+                            else
+                            {
+                                break;
+                            }
+                            clear_buffer();
+                        }
+                        while (1);
+
+                        if(first_team_score < 0)
+                        {
+                            clear();
+                            printf("Incorrect input, score must be greater than 0!!!\n");
+                            sleep(SLEEP_SHORT);
+                        }
+                        else
+                        {
+                            clear();
+                            printf("team %s score is %d\n to correct team score input 'r'\n to accept team score input any other character\noption: ", new_match->first_team_name, first_team_score);
+                            int option = 0;
+                            do
+                            {
+                                option = accept();
+                                if(option == -1)
+                                {
+                                    printf(" Incorrect input\noption: ");
+                                }
+                            } 
+                            while(option == -1);
+                            
+                            ok = (bool)option;
+                        }
+                    }
+                    while (!ok);
+                    new_match->first_team_score = first_team_score;
+                }   
+                if(second_team_score >= 0)
+                {
+                    bool ok = false;
+                    do
+                    {
+                        do
+                        {
+                            clear();
+                            printf(" Enter %s score: ", new_match->second_team_name);
+                            if(scanf("%d", &second_team_score) != 1)
+                                {
+                                    printf("Incorrect input\n");
+                                    sleep(SLEEP_SHORT);
+                                }
+
+                            else
+                            {
+                                break;
+                            }
+                            clear_buffer();
+                        } while (1);
+
+                        if (second_team_score < 0)
+                        {
+                            clear();
+                            printf("Incorrect input, score must be greater than 0!!!\n");
+                            sleep(SLEEP_SHORT);
+                        }
+                        else
+                        {
+                            clear();
+                            printf("team %s score is %d\n to correct team score input 'r'\n to accept team score input any other character\noption: ", new_match->first_team_name, first_team_score);
+                            int option = 0;
+                            do
+                            {
+                                option = accept();
+                                if(option == -1)
+                                {
+                                    printf(" Incorrect input\noption: ");
+                                }
+                            } 
+                            while(option == -1);
+                            
+                            ok = (bool)option;
+                        }
+                    }
+                    while (!ok);
+                    new_match->second_team_score = second_team_score;
+                }
+                if(first_team_score>second_team_score)
+                {
+                    strcpy(new_match->winner,new_match->first_team_name);
+                    strcpy(new_match->loser,new_match->second_team_name);
+                }
+                else if(first_team_score<second_team_score)
+                {
+                    strcpy(new_match->winner, new_match->second_team_name);
+                    strcpy(new_match->loser,new_match->first_team_name);
+                }
+                else
+                {
+                    clear();
+                    printf("there is a draw the computer will decide who won the game\n");
+                    sleep(SLEEP_SHORT);
+                    for(int k = 0; k<57; k++)
+                    {
+                        printf("=");
+                    }
+                    printf("\n");
+                    sleep(SLEEP_SHORT);
+                    int los = rand()%2;
+                    if(los == 1)
+                    {
+                        strcpy(new_match->winner,new_match->first_team_name);
+                        strcpy(new_match->loser,new_match->second_team_name);
+                    }
+                    else
+                    {
+                        strcpy(new_match->winner,new_match->second_team_name);
+                        strcpy(new_match->loser,new_match->first_team_name);
+                    }
+                }
+            }
+            else
+            {
+                new_match->first_team_score = 0;
+                new_match->second_team_score = -1;
+                strcpy(new_match->winner,new_match->first_team_name);
+            }
+        }
+
+        if(input[0] == 'r')
+        {
+            if(games[i] != -1)
+            {
+                int first_team_score = new_match->first_team_score;
+                int second_team_score = new_match->second_team_score;
+                if(first_team_score >= 0)
+                {
+                    first_team_score = rand()%10;
+                    new_match->first_team_score = first_team_score;
+                }   
+                if(second_team_score >= 0)
+                {
+                    second_team_score = rand()%10;
+                    new_match->second_team_score = second_team_score;
+                }
+                if(first_team_score>second_team_score)
+                {
+                    strcpy(new_match->winner,new_match->first_team_name);
+                    strcpy(new_match->loser,new_match->second_team_name);
+                }
+                else
+                {
+                    strcpy(new_match->winner, new_match->second_team_name);
+                    strcpy(new_match->loser,new_match->first_team_name);
+                }
+            }
+            else
+            {
+                new_match->first_team_score = 0;
+                new_match->second_team_score = -1;
+                strcpy(new_match->winner,new_match->first_team_name);
+            }
+        }
+        //printing teams
+        {
+            clear();
+            printf("%15s... [%d] ->\n", new_match->first_team_name, new_match->first_team_score);
+            if(new_match->second_team_score != -1 && new_match->first_team_score != -1)
+            {
+                printf("%26s %s\n"," ",new_match->winner);
+            }
+            else if(new_match->second_team_score == -1 && new_match->first_team_score != -1)
+            {
+                printf("%26s team %s wins by forfeit\n", " ", new_match->first_team_name);
+            }
+            printf("%15s... [%d] ->\n", new_match->second_team_name, new_match->second_team_score);
+            sleep(SLEEP);
+        }
+        //add new_match to list
+        if (match == NULL)
+        {
+            match = new_match;
         }
         else
         {
-            printf("none \n");
+            struct match *tmp = match;
+            while(tmp->next_match)
+            {
+                tmp = tmp->next_match;
+            } 
+            tmp->next_match = new_match;
         }
-        printf("\n");
+
     }
-    
+    return match;
 }
 
-void tournament_starter(struct team* team, int number_of_teams, struct match** first_match, struct match* match)
+struct match* tournament_starter(struct team* team, int number_of_teams, struct match* match)
 {
     srand(time(NULL));
-    
     struct team* first_team = team;
-
-    int number_of_participating_teams = how_many_teams_in_tournament(first_team);
-    for (int i = 1; number_of_participating_teams >= 2; i++)
+    int i = 1;
+    int number_of_participating_teams = 0; 
+    do
     {
         clear();
+        number_of_participating_teams = how_many_teams_in_tournament(team);
         int* queue = calloc(number_of_participating_teams,sizeof(int));
         
         int number = 0;
@@ -1188,7 +1422,6 @@ void tournament_starter(struct team* team, int number_of_teams, struct match** f
             if(team->in_tournament)
             {
                 queue[number] = team->team_number;
-                //printf("team[%d]: %s\n", number+1, team->team_name);
                 number++;
             }
             if(number == number_of_participating_teams)
@@ -1199,10 +1432,19 @@ void tournament_starter(struct team* team, int number_of_teams, struct match** f
         }
         printf("\n");
 
+        //printf teams numers in tournament:
+        for (int j = 0; j < number_of_participating_teams; j++)
+        {
+            printf("%d ", queue[j]);
+        }
+        printf("\n");
+        
+        //do math :)
         int rest = number_of_participating_teams % 2;
         int groups = number_of_participating_teams / 2;
         int* games = calloc((rest+groups),sizeof(int));
 
+        //if someone do not have pair to play they auto win
         if(rest)
         {
             games[rand()%(rest+groups)] = -1; 
@@ -1217,19 +1459,43 @@ void tournament_starter(struct team* team, int number_of_teams, struct match** f
             }
             games[fate] = k;
         }
-            
-        printf("Stage [%d]: \n\n", i);
 
-        games_handler(first_team, games, queue,number_of_participating_teams, first_match, match);
+        //printf teams pairs in tournament: (+1)
+        for (int j = 0; j < (rest+groups); j++)
+        {
+            printf("%d vs %d\n", j+1, games[j]+1);
+        }
+        printf("\n");
 
-        number_of_participating_teams = groups + rest;
+        sleep(SLEEP);
+        clear();
+        printf("Stage [%d]\n", i);
+        match = games_handler(first_team, games, queue,number_of_participating_teams, match);
         team = first_team;
+
+        //match 
+        struct match *tmp_match = match;
+        while (tmp_match != NULL)
+        {   
+            struct team *tmp_team = team;
+            while (tmp_team != NULL)
+            {
+                if(strcmp(tmp_team->team_name,tmp_match->loser) == 0)
+                {  
+                    tmp_team->in_tournament = 0;
+                    break;
+                }
+                tmp_team = tmp_team->next_team;
+            }
+            tmp_match = tmp_match->next_match; 
+        }
 
         free(games);
         free(queue);
-        sleep(SLEEP_LONG);
-
+        i++;
     }
+    while (number_of_participating_teams > 2);
+    return match;
 }
 
 int tournament_handler(struct team** first_team, struct team* team, int number_of_teams, struct match** first_match, struct match* match)
@@ -1316,12 +1582,9 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
                 break;
 
                 case 'l':
-                    if(for_sure('l'))
-                    {
-                        team = enter_teams_from_file(team, number_of_teams, number_of_teams);
-                        (*first_team) = team; 
-                        renumber_teams(team);
-                    }
+                    team = enter_teams_from_file(team, number_of_teams, number_of_teams);
+                    (*first_team) = team; 
+                    renumber_teams(team);
                 break;
 
                 case 'r':
@@ -1379,7 +1642,10 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
                             case 't':
                                 if(for_sure('t'))
                                 {
-                                    tournament_starter(team, entered_teams, first_match, match);
+                                    match = tournament_starter(team, entered_teams, match);
+                                    (*first_match) = match;
+                                    team = delete_all_teams(team);
+                                    (*first_team) = team;
                                 }
                             break;
 
