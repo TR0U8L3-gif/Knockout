@@ -62,6 +62,8 @@ int how_many_teams_in_tournament(struct team*);
 int how_many_games(int);
 void print_teams(struct team*, int);
 void print_all_teams_to_file(struct team*, int);
+void winner(struct match*);
+void print_matches(struct match*);
 void renumber_teams(struct team*);
 struct team* enter_teams(struct team*, int, int);
 struct team* enter_teams_from_file(struct team*, int, int);
@@ -131,7 +133,7 @@ bool for_sure(char option)
     do
     { 
         clear();
-        printf("Are you sure you want to  perform [%c] action y/n: ", option);
+        printf("Are you sure you want to perform [%c] action y/n: ", option);
         scanf("%[^\n]", decide);
         
         if(strlen(decide) != 1)
@@ -402,6 +404,36 @@ void print_all_teams_to_file(struct team *team, int number_of_teams)
         team = team->next_team;
     }
     fclose(f);
+}
+
+void winner(struct match *match)
+{
+    while (match->next_match != NULL)
+    {
+        match = match->next_match;
+    }
+    clear();
+    printf("The winner is: %s\n", match->winner);
+    sleep(SLEEP);
+}
+
+void print_matches(struct match *match)
+{
+    clear();
+    int i = 1;
+    while (match != NULL)
+    {
+        printf("[%d] match: %s vs %s \n", i, match->first_team_name, match->second_team_name);
+        if(match->second_team_score != -1)
+        printf(" score: %d:%d\n", match->first_team_score, match->second_team_score);
+        else
+        printf(" score: walkover\n");
+        printf(" winner: %s\n", match->winner);
+        printf("\n");
+        match = match->next_match;
+        i++;
+    }
+    sleep((SLEEP_SHORT * i));
 }
 
 void renumber_teams(struct team* team)
@@ -1186,7 +1218,7 @@ struct match* games_handler(struct team* team, int* games, int* queue, int numbe
         team = first_team;
 
         printf("\n");
-        sleep(SLEEP);
+        //sleep(SLEEP);
 
         //scoring
         if(input[0] == 'e')
@@ -1380,7 +1412,7 @@ struct match* games_handler(struct team* team, int* games, int* queue, int numbe
             }
             else if(new_match->second_team_score == -1 && new_match->first_team_score != -1)
             {
-                printf("%26s team %s wins by forfeit\n", " ", new_match->first_team_name);
+                printf("%26s team %s won by walkover\n", " ", new_match->first_team_name);
             }
             printf("%15s... [%d] ->\n", new_match->second_team_name, new_match->second_team_score);
             sleep(SLEEP);
@@ -1461,13 +1493,14 @@ struct match* tournament_starter(struct team* team, int number_of_teams, struct 
         }
 
         //printf teams pairs in tournament: (+1)
+        /*
         for (int j = 0; j < (rest+groups); j++)
         {
             printf("%d vs %d\n", j+1, games[j]+1);
         }
         printf("\n");
-
         sleep(SLEEP);
+        */
         clear();
         printf("Stage [%d]\n", i);
         match = games_handler(first_team, games, queue,number_of_participating_teams, match);
@@ -1495,6 +1528,7 @@ struct match* tournament_starter(struct team* team, int number_of_teams, struct 
         i++;
     }
     while (number_of_participating_teams > 2);
+    winner(match);
     return match;
 }
 
@@ -1608,7 +1642,11 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
                     {
                         printf("Incorect input!!!\n there is not [%c] option\n", input[0]);
                         sleep(SLEEP_SHORT); 
-                    }                         
+                    }       
+                    else
+                    {
+                        print_matches(match);
+                    }                  
                 break;
 
                 case 'w':
@@ -1616,7 +1654,11 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
                     {
                         printf("Incorect input!!!\n there is not [%c] option\n", input[0]);
                         sleep(SLEEP_SHORT); 
-                    }
+                    }       
+                    else
+                    {
+                        winner(match);
+                    } 
                 break;
 
                 default:
@@ -1634,7 +1676,7 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
                             break;
 
                             case 'd':
-                                team = delete_teams(team, number_of_teams);
+                                team = delete_teams(team, entered_teams);
                                 (*first_team) = team;
                                 renumber_teams(team);
                             break;
@@ -1642,6 +1684,7 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
                             case 't':
                                 if(for_sure('t'))
                                 {
+                                    match = NULL;
                                     match = tournament_starter(team, entered_teams, match);
                                     (*first_match) = match;
                                     team = delete_all_teams(team);
