@@ -55,7 +55,7 @@ struct match
 void clear(void);
 void clear_buffer(void);
 static int compare(const void* , const void* );
-void sort(const char*[], int);
+void sort(char*[], int);
 int accept(void);
 bool for_sure(char);
 int count_file_teams(char[]);
@@ -116,9 +116,9 @@ static int compare(const void* a, const void* b)
     return strcmp(*(const char**)a, *(const char**)b);
 }
   
-void sort(const char* array[], int size)
+void sort(char* array[], int size)
 {
-    qsort(array, size, sizeof(const char*), compare);
+    qsort(array, size, sizeof(*array), compare);
 }
 
 int accept(void)
@@ -366,7 +366,7 @@ void print_teams(struct team *team, int number_of_teams)
            {
                option = 'd';
                ok = true;
-           }        sleep(SLEEP_LONG);
+           }
            if (input[0] == 'a')
            {
                option = 'a';
@@ -378,7 +378,8 @@ void print_teams(struct team *team, int number_of_teams)
 
     if(option == 'd')
     {
-        while (team!=NULL && (x != 1))
+        team = first_team;
+        while (team != NULL)
         {
             if(team->team_number == x || x==0)
             {
@@ -411,7 +412,7 @@ void print_teams(struct team *team, int number_of_teams)
     if(option == 'a')
     {
         team = first_team;
-        char* teams_names[number_of_teams];
+        char *teams_names[number_of_teams];
         int i = 0;
         while (team != NULL)
         {
@@ -1648,7 +1649,7 @@ int tournament_handler(struct team** first_team, struct team* team, int number_o
         printf("%d teams take part in the competition \n", number_of_teams);
         printf("%d teams entered the competition \n\n", entered_teams);
         
-        printf(" Input 'n' to display number of games during the contets\n");
+        printf(" Input 'n' to display number of games during the contest\n");
         printf(" Input 'a' to add one team to competition\n");
         printf(" Input 'e' to enter participating teams from keyboard\n");
         printf(" Input 'l' to load participating teams from file\n");
