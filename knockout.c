@@ -314,7 +314,7 @@ void print_teams(struct team *team, int number_of_teams)
             }
             printf("\n");
             team = first_team;
-            printf(" To printa all teams type '0'\n To print one team type their \"team number\"\n To exit type '-1'\n\noption: ");
+            printf(" To print all teams type '0'\n To print one team type their \"team number\"\n To exit type '-1'\n\noption: ");
             if(scanf(" %d", &x)!=1)
             {
                 printf("Incorrect input\n");
@@ -573,7 +573,7 @@ struct team* enter_teams(struct team* team, int number_of_teams, int number_of_a
         return first_team;
     }
     else if(number_of_added_teams>remaining_teams){
-        printf(" %d slots reamin!!!\n", remaining_teams);
+        printf(" %d slots remain!!!\n", remaining_teams);
         sleep(SLEEP);
         number_of_added_teams = remaining_teams;
     }
