@@ -530,8 +530,10 @@ void print_matches(struct match *match)
     while (match != NULL)
     {
         printf("[%d] match: %s vs %s \n", i, match->first_team_name, match->second_team_name);
-        if(match->second_team_score != -1)
+        if(match->second_team_score != -1 &&  match->first_team_score != -1)
         printf(" score: %d:%d\n", match->first_team_score, match->second_team_score);
+        else if(match->second_team_score == -1  && match->first_team_score == -1)
+        printf(" score: teams disqualified\n");
         else
         printf(" score: walkover\n");
         printf(" winner: %s\n", match->winner);
@@ -1341,7 +1343,7 @@ struct match* games_handler(struct team* team, int* games, int* queue, int numbe
                         do
                         {
                             clear();
-                            printf(" Enter %s score: ", new_match->first_team_name);
+                            printf(" Enter %s score (to disqualify team input '-1'): ", new_match->first_team_name);
                             if(scanf("%d", &first_team_score) != 1)
                                 {
                                     printf("Incorrect input\n");
@@ -1356,7 +1358,7 @@ struct match* games_handler(struct team* team, int* games, int* queue, int numbe
                         }
                         while (1);
 
-                        if(first_team_score < 0)
+                        if(first_team_score < -1)
                         {
                             clear();
                             printf("Incorrect input, score must be greater than 0!!!\n");
@@ -1391,7 +1393,7 @@ struct match* games_handler(struct team* team, int* games, int* queue, int numbe
                         do
                         {
                             clear();
-                            printf(" Enter %s score: ", new_match->second_team_name);
+                            printf(" Enter %s score (to disqualify team input '-1'): ", new_match->second_team_name);
                             if(scanf("%d", &second_team_score) != 1)
                                 {
                                     printf("Incorrect input\n");
@@ -1405,7 +1407,7 @@ struct match* games_handler(struct team* team, int* games, int* queue, int numbe
                             clear_buffer();
                         } while (1);
 
-                        if (second_team_score < 0)
+                        if (second_team_score < -1)
                         {
                             clear();
                             printf("Incorrect input, score must be greater than 0!!!\n");
@@ -1432,7 +1434,12 @@ struct match* games_handler(struct team* team, int* games, int* queue, int numbe
                     while (!ok);
                     new_match->second_team_score = second_team_score;
                 }
-                if(first_team_score>second_team_score)
+                if(first_team_score == -1 && second_team_score == -1)
+                {
+                    strcpy(new_match->winner,"none");
+                    strcpy(new_match->loser,"none");
+                }
+                else if(first_team_score>second_team_score)
                 {
                     strcpy(new_match->winner,new_match->first_team_name);
                     strcpy(new_match->loser,new_match->second_team_name);
@@ -1482,15 +1489,20 @@ struct match* games_handler(struct team* team, int* games, int* queue, int numbe
                 int second_team_score = new_match->second_team_score;
                 if(first_team_score >= 0)
                 {
-                    first_team_score = rand()%10;
+                    first_team_score = rand()%11-1;
                     new_match->first_team_score = first_team_score;
                 }   
                 if(second_team_score >= 0)
                 {
-                    second_team_score = rand()%10;
+                    second_team_score = rand()%11-1;
                     new_match->second_team_score = second_team_score;
                 }
-                if(first_team_score>second_team_score)
+                if(first_team_score == -1 && second_team_score == -1)
+                {
+                    strcpy(new_match->winner,"none");
+                    strcpy(new_match->loser,"none");
+                }
+                else if(first_team_score>second_team_score)
                 {
                     strcpy(new_match->winner,new_match->first_team_name);
                     strcpy(new_match->loser,new_match->second_team_name);
@@ -1512,13 +1524,13 @@ struct match* games_handler(struct team* team, int* games, int* queue, int numbe
         {
             clear();
             printf("%15s... [%d] ->\n", new_match->first_team_name, new_match->first_team_score);
-            if(new_match->second_team_score != -1 && new_match->first_team_score != -1)
+            if((new_match->second_team_score == -1 && new_match->first_team_score != -1 )||(new_match->second_team_score != -1 && new_match->first_team_score == -1))
+            {
+                printf("%26s team %s won by walkover\n", " ", new_match->winner);
+            }
+            else
             {
                 printf("%26s %s\n"," ",new_match->winner);
-            }
-            else if(new_match->second_team_score == -1 && new_match->first_team_score != -1)
-            {
-                printf("%26s team %s won by walkover\n", " ", new_match->first_team_name);
             }
             printf("%15s... [%d] ->\n", new_match->second_team_name, new_match->second_team_score);
             sleep(SLEEP);
