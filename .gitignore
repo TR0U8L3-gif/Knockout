@@ -53,6 +53,7 @@ dkms.conf
 
 # text files
 *.txt
+!teams.txt
 
 #compiled file
 knockout
