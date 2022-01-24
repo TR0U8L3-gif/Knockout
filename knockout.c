@@ -54,6 +54,8 @@ struct match
 
 void clear(void);
 void clear_buffer(void);
+static int compare(const void* , const void* );
+void sort(const char*[], int);
 int accept(void);
 bool for_sure(char);
 int count_file_teams(char[]);
@@ -107,6 +109,16 @@ void clear_buffer(void)
 {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
+}
+
+static int compare(const void* a, const void* b)
+{
+    return strcmp(*(const char**)a, *(const char**)b);
+}
+  
+void sort(const char* array[], int size)
+{
+    qsort(array, size, sizeof(const char*), compare);
 }
 
 int accept(void)
@@ -287,6 +299,7 @@ int how_many_games(int number_of_teams)
 
 void print_teams(struct team *team, int number_of_teams)
 {
+    struct team *first_team = team; 
     int x = 0;
     do
     {
@@ -323,33 +336,125 @@ void print_teams(struct team *team, int number_of_teams)
         }
     }while(x<-1||x>number_of_teams);
 
-    while (team!=NULL && (x != 1))
+    char option = ' ';
+    if(x == 0)
     {
-        if(team->team_number == x || x==0)
+        bool ok = false;
+        do
         {
-            clear();
-            printf("team name: %s\n\nteam number: %d\n",team->team_name,team->team_number);
-            printf("city: %s\nwebsite: %s\ne-mail: %s\n",team->team_city,team->team_websie,team->team_email);
-            printf("team size: %d players\nis team still in tournament? ",team->team_size);
-            if(team->in_tournament)
-            {
-                printf("yes");
-            }
-            else
-            {
-                printf("no");
-            }
-            printf("\n");
-            printf("\nteam captain name: %s\nsurname: %s\nage: %d\n\n",team->captain.player_name,team->captain.player_surname,team->captain.player_age);
-            for(int i = 0; i<(team->team_size)-1; i++)
-            {
-            printf("player[%d] name: %s    surname: %s    age: %d\n",i+1,team->players[i].player_name,team->players[i].player_surname,team->players[i].player_age);
-            }
-            printf("\n");
-            printf("address: %p\nnext team address: %p \n",team,team->next_team);
-            sleep(SLEEP_LONG);
+           char input[MAX];
+           clear();
+           clear_buffer();
+           printf("Do you prefer sorting teams by their name or by their number?\n");
+           printf(" to sort teams by number type 'd'\n");
+           printf(" to sort teams by name type 'a'\n");
+           printf("option: ");
+           scanf(" %[^\n]",input);
+           if(strlen(input) != 1)
+           {
+               clear();
+               printf("Incorrect input!!!\n please enter one letter\n");
+               sleep(SLEEP_SHORT);
+           }
+           else if(input[0] != 'd' && input[0] != 'a')
+           {
+               clear();
+               printf("Incorrect input!!!\n");
+               sleep(SLEEP_SHORT);
+           }
+           if (input[0] == 'd')
+           {
+               option = 'd';
+               ok = true;
+           }        sleep(SLEEP_LONG);
+           if (input[0] == 'a')
+           {
+               option = 'a';
+               ok =  true;
+           }
         }
-        team = team->next_team;
+        while(!ok);
+    }
+
+    if(option == 'd')
+    {
+        while (team!=NULL && (x != 1))
+        {
+            if(team->team_number == x || x==0)
+            {
+                clear();
+                printf("team name: %s\n\nteam number: %d\n",team->team_name,team->team_number);
+                printf("city: %s\nwebsite: %s\ne-mail: %s\n",team->team_city,team->team_websie,team->team_email);
+                printf("team size: %d players\nis team still in tournament? ",team->team_size);
+                if(team->in_tournament)
+                {
+                    printf("yes");
+                }
+                else
+                {
+                    printf("no");
+                }
+                printf("\n");
+                printf("\nteam captain name: %s\nsurname: %s\nage: %d\n\n",team->captain.player_name,team->captain.player_surname,team->captain.player_age);
+                for(int i = 0; i<(team->team_size)-1; i++)
+                {
+                printf("player[%d] name: %s    surname: %s    age: %d\n",i+1,team->players[i].player_name,team->players[i].player_surname,team->players[i].player_age);
+                }
+                printf("\n");
+                printf("address: %p\nnext team address: %p \n",team,team->next_team);
+                sleep(SLEEP_LONG);
+            }
+            team = team->next_team;
+        }
+    }
+    
+    if(option == 'a')
+    {
+        team = first_team;
+        char* teams_names[number_of_teams];
+        int i = 0;
+        while (team != NULL)
+        {
+            teams_names[i] = team->team_name;
+            //printf("%d %s\n", i, teams_names[i]);
+            i++;
+            team = team->next_team;
+        }
+        sort(teams_names,number_of_teams);
+        for (int i = 0; i < number_of_teams; i++)
+        {
+            printf("%d %s\n", i, teams_names[i]);
+            team = first_team;
+            while (team != NULL)
+            {
+                if(teams_names[i] == team->team_name)
+                {
+                    clear();
+                    printf("team name: %s\n\nteam number: %d\n",team->team_name,team->team_number);
+                    printf("city: %s\nwebsite: %s\ne-mail: %s\n",team->team_city,team->team_websie,team->team_email);
+                    printf("team size: %d players\nis team still in tournament? ",team->team_size);
+                    if(team->in_tournament)
+                    {
+                        printf("yes");
+                    }
+                    else
+                    {
+                        printf("no");
+                    }
+                    printf("\n");
+                    printf("\nteam captain name: %s\nsurname: %s\nage: %d\n\n",team->captain.player_name,team->captain.player_surname,team->captain.player_age);
+                    for(int i = 0; i<(team->team_size)-1; i++)
+                    {
+                    printf("player[%d] name: %s    surname: %s    age: %d\n",i+1,team->players[i].player_name,team->players[i].player_surname,team->players[i].player_age);
+                    }
+                    printf("\n");
+                    printf("address: %p\nnext team address: %p \n",team,team->next_team);
+                    sleep(SLEEP_LONG);
+                }
+                team = team->next_team;
+            }
+            
+        }
     }
 }
 
