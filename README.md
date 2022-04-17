@@ -1,5 +1,5 @@
 # knockout
- This respository is my first project for the basics of programming at the Białystok University of Technology
+ This repository is my first project for the basics of programming at the Białystok University of Technology
 ## quick code overview: 
  Tournament where the loser of each match-up is immediately eliminated from the competition
 
