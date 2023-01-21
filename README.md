@@ -1,5 +1,6 @@
 # knockout
- This repository is my first project for the basics of programming at the Białystok University of Technology
+Elimination tournament where the loser of each match-up is immediately eliminated from the tournament
+
 ## quick code overview: 
  Tournament where the loser of each match-up is immediately eliminated from the competition
 
